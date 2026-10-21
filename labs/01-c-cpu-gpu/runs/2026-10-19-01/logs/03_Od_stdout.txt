@@ -1,0 +1,9 @@
+Debug checkpoint: before VirtualAlloc
+VirtualAlloc: 4096 bytes at 000002482E6F0000
+Memory checksum: 505160; check=PASS
+CreateFileA: success
+WriteFile: 4096 bytes
+ReadFile: 4096 bytes
+Round-trip bytes: PASS
+CloseHandle: success
+VirtualFree: success

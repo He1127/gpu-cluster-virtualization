@@ -1,0 +1,120 @@
+从本目录配套原始Word报告的日志附录提取，非独立终端原始日志；源报告保持原样。
+源报告：reports/C调用CPU与GPU.docx（相对于实验根目录）
+源报告 SHA256：13387a227ffa8d45c9600133b699a6f89412ba7e6053dbe948a6953f4661abdf
+以下文字按报告正文段落顺序提取。
+
+日志记录：
+(base) PS C:\Users\鹤> Set-Location 'E:\QC\cpu_gpu_12_steps_20261017\lab'
+(base) PS E:\QC\cpu_gpu_12_steps_20261017\lab> .\build_cpu.cmd
+(base) PS E:\QC\cpu_gpu_12_steps_20261017\lab> $LASTEXITCODE
+0
+(base) PS E:\QC\cpu_gpu_12_steps_20261017\lab> .\build_gpu.cmd
+(base) PS E:\QC\cpu_gpu_12_steps_20261017\lab> $LASTEXITCODE
+0
+(base) PS E:\QC\cpu_gpu_12_steps_20261017\lab>
+(base) PS E:\QC\cpu_gpu_12_steps_20261017\lab> Get-Item .\bin\cpu_labs_Od.exe, .\bin\gpu_labs.exe
+
+
+    目录: E:\QC\cpu_gpu_12_steps_20261017\lab\bin
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----        2026/10/19     15:00         692736 cpu_labs_Od.exe
+-a----        2026/10/19     15:01         864256 gpu_labs.exe
+
+
+(base) PS E:\QC\cpu_gpu_12_steps_20261017\lab> Get-Item .\build\kernels.ptx, .\build\kernels.cubin
+
+
+    目录: E:\QC\cpu_gpu_12_steps_20261017\lab\build
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----        2026/10/19     15:01          11156 kernels.ptx
+-a----        2026/10/19     15:01          23520 kernels.cubin
+
+
+(base) PS E:\QC\cpu_gpu_12_steps_20261017\lab> .\bin\cpu_labs_Od.exe 01
+Hello from C.
+Windows: 10.0.26200 (x64)
+CPU: Intel(R) Core(TM) i9-14900HX
+Logical processors: 32
+MSVC: _MSC_VER=1941, _MSC_FULL_VER=194134123
+NVCC: Cuda compilation tools, release 12.6, V12.6.20
+cuobjdump: Cuda compilation tools, release 12.6, V12.6.20
+GPU, driver: NVIDIA GeForce RTX 4060 Laptop GPU, 560.94
+Pointer size: 8 bytes
+(base) PS E:\QC\cpu_gpu_12_steps_20261017\lab> Get-Content .\results\03_Od_stdout.txt
+Debug checkpoint: before VirtualAlloc
+VirtualAlloc: 4096 bytes at 000002482E6F0000
+Memory checksum: 505160; check=PASS
+CreateFileA: success
+WriteFile: 4096 bytes
+ReadFile: 4096 bytes
+Round-trip bytes: PASS
+CloseHandle: success
+VirtualFree: success
+(base) PS E:\QC\cpu_gpu_12_steps_20261017\lab> .\bin\cpu_labs_Od.exe 04 --n 1000000 --seed 17
+n=1000000 seed=17 reference=503993310
+workers=1 total=503993310 wait=0 check=PASS time=1.153 ms
+  TID=55248 range=[0,1000000) sum=503993310
+workers=2 total=503993310 wait=0 check=PASS time=0.747 ms
+  TID=55584 range=[0,500000) sum=251994947
+  TID=56008 range=[500000,1000000) sum=251998363
+workers=4 total=503993310 wait=0 check=PASS time=0.723 ms
+  TID=56004 range=[0,250000) sum=125997551
+  TID=56000 range=[250000,500000) sum=125997396
+  TID=56036 range=[500000,750000) sum=125999259
+  TID=56040 range=[750000,1000000) sum=125999104
+(base) PS E:\QC\cpu_gpu_12_steps_20261017\lab> Get-Content .\results\08_api.log
+2026-10-19T17:27:17.987 line=150 cuInit(0) => 0 CUDA_SUCCESS
+2026-10-19T17:27:17.988 line=151 cuDeviceGet(&device, 0) => 0 CUDA_SUCCESS
+2026-10-19T17:27:18.038 line=154 cuCtxCreate(&context, 0, device) => 0 CUDA_SUCCESS
+2026-10-19T17:27:18.038 line=155 cuModuleLoad(&module, "build\\kernels.cubin") => 0 CUDA_SUCCESS
+2026-10-19T17:27:18.038 line=161 cuModuleGetFunction(&f, module, name) => 0 CUDA_SUCCESS
+2026-10-19T17:27:49.163 line=323 cuMemAlloc(&da, bytes) => 0 CUDA_SUCCESS
+2026-10-19T17:27:49.163 line=324 cuMemAlloc(&db, bytes) => 0 CUDA_SUCCESS
+2026-10-19T17:27:49.163 line=325 cuMemAlloc(&dc, bytes) => 0 CUDA_SUCCESS
+2026-10-19T17:27:49.163 line=326 cuMemcpyHtoD(da, A, bytes) => 0 CUDA_SUCCESS
+2026-10-19T17:27:49.164 line=327 cuMemcpyHtoD(db, B, bytes) => 0 CUDA_SUCCESS
+2026-10-19T17:27:53.305 line=329 cuLaunchKernel(f, (n + 127) / 128, 1, 1, 128, 1, 1, 0, NULL, args, NULL) => 0 CUDA_SUCCESS
+2026-10-19T17:27:59.086 line=330 cuCtxSynchronize() => 0 CUDA_SUCCESS
+2026-10-19T17:27:59.385 line=331 cuMemcpyDtoH(C, dc, bytes) => 0 CUDA_SUCCESS
+2026-10-19T17:29:31.308 line=346 cuMemFree(da) => 0 CUDA_SUCCESS
+2026-10-19T17:29:37.966 line=347 cuMemFree(db) => 0 CUDA_SUCCESS
+2026-10-19T17:29:40.468 line=348 cuMemFree(dc) => 0 CUDA_SUCCESS
+2026-10-19T17:30:53.190 line=168 cuModuleUnload(module) => 0 CUDA_SUCCESS
+2026-10-19T17:30:53.274 line=173 cuCtxDestroy(context) => 0 CUDA_SUCCESS
+(base) PS E:\QC\cpu_gpu_12_steps_20261017\lab> .\bin\gpu_labs.exe 09
+GPU foundation step 09 | actual run 2026-10-19T17:31:48.783 | C + CUDA Driver API
+grid=2 block=32 N=64: unique coverage=PASS; 64 guard entries=PASS
+  gid=0 blockIdx=0 threadIdx=0 visits=1
+  gid=1 blockIdx=0 threadIdx=1 visits=1
+  gid=2 blockIdx=0 threadIdx=2 visits=1
+  gid=62 blockIdx=1 threadIdx=30 visits=1
+  gid=63 blockIdx=1 threadIdx=31 visits=1
+grid=2 block=64 N=70: unique coverage=PASS; 64 guard entries=PASS
+  gid=0 blockIdx=0 threadIdx=0 visits=1
+  gid=1 blockIdx=0 threadIdx=1 visits=1
+  gid=2 blockIdx=0 threadIdx=2 visits=1
+  gid=68 blockIdx=1 threadIdx=4 visits=1
+  gid=69 blockIdx=1 threadIdx=5 visits=1
+Formula: global_id=blockIdx.x*blockDim.x+threadIdx.x
+PASS: tail threads are guarded; every valid index visited exactly once.
+Exit status: 0; API trace: results/09_api.log
+(base) PS E:\QC\cpu_gpu_12_steps_20261017\lab> Get-Content .\results\08_run.log
+GPU foundation step 08 | actual run 2026-10-19T17:27:15.502 | C + CUDA Driver API
+DEBUG stage=81 before cuLaunchKernel(vec_add); host arrays inspectable in Locals
+DEBUG stage=82 after GPU result copied to C; host arrays inspectable in Locals
+Module: build/kernels.cubin; entry: vec_add
+N=257; grid=(3,1,1); block=(128,1,1)
+C[0] = 0.00 + 128.50 = 128.50
+C[1] = 0.25 + 128.00 = 128.25
+C[2] = 0.50 + 127.50 = 128.00
+C[3] = 0.75 + 127.00 = 127.75
+Last C[256]=64.50; exact equality=257/257; max_error=0
+PASS
+Exit status: 0; API trace: results/08_api.log
+(base) PS E:\QC\cpu_gpu_12_steps_20261017\lab>

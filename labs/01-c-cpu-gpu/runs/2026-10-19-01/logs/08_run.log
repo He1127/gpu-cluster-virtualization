@@ -1,0 +1,12 @@
+GPU foundation step 08 | actual run 2026-10-19T17:27:15.502 | C + CUDA Driver API
+DEBUG stage=81 before cuLaunchKernel(vec_add); host arrays inspectable in Locals
+DEBUG stage=82 after GPU result copied to C; host arrays inspectable in Locals
+Module: build/kernels.cubin; entry: vec_add
+N=257; grid=(3,1,1); block=(128,1,1)
+C[0] = 0.00 + 128.50 = 128.50
+C[1] = 0.25 + 128.00 = 128.25
+C[2] = 0.50 + 127.50 = 128.00
+C[3] = 0.75 + 127.00 = 127.75
+Last C[256]=64.50; exact equality=257/257; max_error=0
+PASS
+Exit status: 0; API trace: results/08_api.log

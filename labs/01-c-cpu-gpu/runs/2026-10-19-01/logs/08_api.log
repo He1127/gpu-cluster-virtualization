@@ -1,0 +1,18 @@
+2026-10-19T17:27:17.987 line=150 cuInit(0) => 0 CUDA_SUCCESS
+2026-10-19T17:27:17.988 line=151 cuDeviceGet(&device, 0) => 0 CUDA_SUCCESS
+2026-10-19T17:27:18.038 line=154 cuCtxCreate(&context, 0, device) => 0 CUDA_SUCCESS
+2026-10-19T17:27:18.038 line=155 cuModuleLoad(&module, "build\\kernels.cubin") => 0 CUDA_SUCCESS
+2026-10-19T17:27:18.038 line=161 cuModuleGetFunction(&f, module, name) => 0 CUDA_SUCCESS
+2026-10-19T17:27:49.163 line=323 cuMemAlloc(&da, bytes) => 0 CUDA_SUCCESS
+2026-10-19T17:27:49.163 line=324 cuMemAlloc(&db, bytes) => 0 CUDA_SUCCESS
+2026-10-19T17:27:49.163 line=325 cuMemAlloc(&dc, bytes) => 0 CUDA_SUCCESS
+2026-10-19T17:27:49.163 line=326 cuMemcpyHtoD(da, A, bytes) => 0 CUDA_SUCCESS
+2026-10-19T17:27:49.164 line=327 cuMemcpyHtoD(db, B, bytes) => 0 CUDA_SUCCESS
+2026-10-19T17:27:53.305 line=329 cuLaunchKernel(f, (n + 127) / 128, 1, 1, 128, 1, 1, 0, NULL, args, NULL) => 0 CUDA_SUCCESS
+2026-10-19T17:27:59.086 line=330 cuCtxSynchronize() => 0 CUDA_SUCCESS
+2026-10-19T17:27:59.385 line=331 cuMemcpyDtoH(C, dc, bytes) => 0 CUDA_SUCCESS
+2026-10-19T17:29:31.308 line=346 cuMemFree(da) => 0 CUDA_SUCCESS
+2026-10-19T17:29:37.966 line=347 cuMemFree(db) => 0 CUDA_SUCCESS
+2026-10-19T17:29:40.468 line=348 cuMemFree(dc) => 0 CUDA_SUCCESS
+2026-10-19T17:30:53.190 line=168 cuModuleUnload(module) => 0 CUDA_SUCCESS
+2026-10-19T17:30:53.274 line=173 cuCtxDestroy(context) => 0 CUDA_SUCCESS

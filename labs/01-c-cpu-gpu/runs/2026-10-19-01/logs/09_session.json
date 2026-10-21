@@ -1,0 +1,13 @@
+{
+  "step":9,
+  "recorded_at_local":"2026-10-19T17:31:50.411",
+  "result_code":0,
+  "host_language":"C (cl /TC)",
+  "controller":"CUDA Driver API",
+  "sha256":{
+    "src/gpu_labs.c":"716a86a7a945fa8ffa1b1f7fe24ccf78aafab9172af279fb55c0e6c5e6bc8638",
+    "src/kernels.cu":"0157af27612e2d65bc130e0df0cb32fb9de8c1902cf066001f401175d5a766e3",
+    "build/kernels.cubin":"e149be1c62eec1c57aad81ec8e7725562d78e40b73f159c7c6370d9a24a2d517",
+    "bin/gpu_labs.exe":"6312f6f6b3becae1f917b34bd65738feffed25f2a06777574c88c482fbe881bc"
+  }
+}

@@ -1,0 +1,9 @@
+Hello from C.
+Windows: 10.0.26200 (x64)
+CPU: Intel(R) Core(TM) i9-14900HX
+Logical processors: 32
+MSVC: _MSC_VER=1941, _MSC_FULL_VER=194134123
+NVCC: Cuda compilation tools, release 12.6, V12.6.20
+cuobjdump: Cuda compilation tools, release 12.6, V12.6.20
+GPU, driver: NVIDIA GeForce RTX 4060 Laptop GPU, 560.94
+Pointer size: 8 bytes

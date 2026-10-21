@@ -1,0 +1,7 @@
+Debug checkpoint: before demo_add / demo_multiply / demo_sum
+Build: Od; runtime inputs: a=37 b=19 n=100000 seed=17
+demo_add: 56
+demo_multiply: 703
+demo_sum: 50396012
+Reference sum: 50396012
+Checks: PASS

@@ -1,0 +1,16 @@
+order,api,success,win32_error_when_failed
+1,CreatePipe(tool),1,0
+2,SetHandleInformation(tool),1,0
+3,CreateProcessA(tool),1,0
+4,WaitForSingleObject(tool),1,0
+5,GetExitCodeProcess(tool),1,0
+6,CreatePipe(tool),1,0
+7,SetHandleInformation(tool),1,0
+8,CreateProcessA(tool),1,0
+9,WaitForSingleObject(tool),1,0
+10,GetExitCodeProcess(tool),1,0
+11,CreatePipe(tool),1,0
+12,SetHandleInformation(tool),1,0
+13,CreateProcessA(tool),1,0
+14,WaitForSingleObject(tool),1,0
+15,GetExitCodeProcess(tool),1,0

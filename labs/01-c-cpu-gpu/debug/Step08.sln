@@ -1,0 +1,17 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.0.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Step08", "Step08.vcxproj", "{BF665E78-6D2F-5C87-B2B1-DA5F4844E8AE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		08_GPU_LAUNCH_BREAK|x64 = 08_GPU_LAUNCH_BREAK|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BF665E78-6D2F-5C87-B2B1-DA5F4844E8AE}.08_GPU_LAUNCH_BREAK|x64.ActiveCfg = 08_GPU_LAUNCH_BREAK|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

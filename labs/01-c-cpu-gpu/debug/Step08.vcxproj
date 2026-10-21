@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build" ToolsVersion="Current">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="08_GPU_LAUNCH_BREAK|x64">
+      <Configuration>08_GPU_LAUNCH_BREAK</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{BF665E78-6D2F-5C87-B2B1-DA5F4844E8AE}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>LabDebug</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='08_GPU_LAUNCH_BREAK|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='08_GPU_LAUNCH_BREAK|x64'">
+    <LocalDebuggerCommand>$(ProjectDir)..\bin\gpu_labs.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommandArguments>08 --debug</LocalDebuggerCommandArguments>
+    <LocalDebuggerWorkingDirectory>$(ProjectDir)..\</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerDebuggerType>NativeOnly</LocalDebuggerDebuggerType>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerEnvironment>LAB_DEBUG_BREAK=1
+PATH=$(ProjectDir)..\bin;$(PATH)</LocalDebuggerEnvironment>
+    <LocalDebuggerMergeEnvironment>true</LocalDebuggerMergeEnvironment>
+  </PropertyGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\cpu_labs.c">
+      <CompileAs>CompileAsC</CompileAs>
+      <AdditionalIncludeDirectories>$(CUDA_PATH)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\src\gpu_labs.c">
+      <CompileAs>CompileAsC</CompileAs>
+      <AdditionalIncludeDirectories>$(CUDA_PATH)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <None Include="..\src\kernels.cu" />
+  </ItemGroup>
+  <PropertyGroup>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(CUDA_PATH)\include;$(ProjectDir)..\src;$(IncludePath)</IncludePath>
+    <NMakeIncludeSearchPath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(CUDA_PATH)\include;$(ProjectDir)..\src;$(IncludePath)</NMakeIncludeSearchPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <CompileAs>CompileAsC</CompileAs>
+      <AdditionalIncludeDirectories>$(CUDA_PATH)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

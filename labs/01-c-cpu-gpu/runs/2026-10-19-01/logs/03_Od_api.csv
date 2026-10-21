@@ -1,0 +1,8 @@
+order,api,success,win32_error_when_failed
+1,VirtualAlloc,1,0
+2,CreateFileA,1,0
+3,WriteFile,1,0
+4,SetFilePointerEx,1,0
+5,ReadFile,1,0
+6,CloseHandle(file),1,0
+7,VirtualFree,1,0
