@@ -1,0 +1,38 @@
+[
+  {
+    "path": "src\\api_stress.c",
+    "lastWriteTime": "2026-10-20 18:13:53",
+    "bytes": 20613,
+    "sha256": "5714d8f80787b86dd2aa1868b8de93f914ab5f23fbf19363b784837bbe9b6b58"
+  },
+  {
+    "path": "src\\kernels.cu",
+    "lastWriteTime": "2026-10-20 18:01:22",
+    "bytes": 2135,
+    "sha256": "23cf0b0152f85497925bca25187cd90ee213ddfce127680ef4a0185381400fba"
+  },
+  {
+    "path": "build.cmd",
+    "lastWriteTime": "2026-10-20 18:01:53",
+    "bytes": 2014,
+    "sha256": "666d9d8027e27826b5ecef9c7c7dd3906d9fe362d496ab26c36ca86842bcd33b"
+  },
+  {
+    "path": "build\\kernels.cubin",
+    "lastWriteTime": "2026-10-20 18:13:57",
+    "bytes": 14696,
+    "sha256": "53e225f55d31cc74776d7e0a4489c0d4e06bf0a67af200202d463d0e0e8bbf0a"
+  },
+  {
+    "path": "build\\kernels.ptx",
+    "lastWriteTime": "2026-10-20 18:13:58",
+    "bytes": 6277,
+    "sha256": "0f08650b76ab571250e716fefb1a80a3b34d8e7aa03f479fc3509ccf1a104c27"
+  },
+  {
+    "path": "bin\\api_stress.exe",
+    "lastWriteTime": "2026-10-20 18:13:58",
+    "bytes": 217088,
+    "sha256": "0c050a9bfbb2e1674ab07955ddf28f848d38d36259db08f2a312b801375715d5"
+  }
+]

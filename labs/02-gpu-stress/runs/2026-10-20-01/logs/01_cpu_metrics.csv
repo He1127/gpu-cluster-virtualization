@@ -1,0 +1,2 @@
+mode,phase,elapsed_s,iterations,gpu_ms,metric,units,errors,checked_values
+cpu,four_thread_sum,0.000878800,4,0.000000,0.878800,ms,0,4194304

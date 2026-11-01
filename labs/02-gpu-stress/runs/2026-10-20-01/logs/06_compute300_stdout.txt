@@ -1,0 +1,47 @@
+C / CUDA Driver API laboratory
+Local_time=2026-10-20 18:15:43 host_compiler=194134123 C_mode=1 CUDA_header=12060
+Command: E:\QC\cpu_gpu_api_stress_20261020\lab\bin\api_stress.exe compute --seconds 300 --mib 64 --csv E:\QC\cpu_gpu_api_stress_20261020\results\06_compute300_metrics.csv
+ACLineStatus=1 (1=AC 0=battery 255=unknown)
+GPU: NVIDIA GeForce RTX 4060 Laptop GPU
+Device_count=1 compute_capability=8.9 SMs=24
+Global_memory_MiB=8188 driver_API_version=12060 nominal_clock_kHz=1890000
+COMPUTE threads=262144 accumulators=8 FMA_loops=512 FLOP_per_launch=2147483648 output_MiB=8.0
+Reference: CPU fmaf, 4 seeds, 64 input patterns; exact full-output comparison every ~1s.
+Comparison tolerance=0 (exact finite float values), any unequal value stops.
+requested_seconds=300.0 grid=1024 block=256 stop_file=STOP
+Every launch is followed by an event wait; each kernel is bounded. Ctrl+C or stop_file cancels.
+Warmup_correctness=PASS validated_seed_count=4 (excluded from timed counters)
+progress elapsed_s=10.0 launches=44653 checks=9 mismatches=0
+progress elapsed_s=20.0 launches=85193 checks=19 mismatches=0
+progress elapsed_s=30.0 launches=125276 checks=29 mismatches=0
+progress elapsed_s=40.0 launches=162870 checks=39 mismatches=0
+progress elapsed_s=50.0 launches=203116 checks=49 mismatches=0
+progress elapsed_s=60.0 launches=242566 checks=59 mismatches=0
+progress elapsed_s=70.0 launches=281537 checks=69 mismatches=0
+progress elapsed_s=80.0 launches=321548 checks=79 mismatches=0
+progress elapsed_s=90.0 launches=361813 checks=89 mismatches=0
+progress elapsed_s=100.0 launches=401440 checks=99 mismatches=0
+progress elapsed_s=110.0 launches=442206 checks=109 mismatches=0
+progress elapsed_s=120.0 launches=483016 checks=119 mismatches=0
+progress elapsed_s=130.0 launches=523437 checks=129 mismatches=0
+progress elapsed_s=140.0 launches=563114 checks=139 mismatches=0
+progress elapsed_s=150.0 launches=601811 checks=149 mismatches=0
+progress elapsed_s=160.0 launches=641785 checks=159 mismatches=0
+progress elapsed_s=170.0 launches=679741 checks=169 mismatches=0
+progress elapsed_s=180.0 launches=717346 checks=179 mismatches=0
+progress elapsed_s=190.0 launches=756334 checks=189 mismatches=0
+progress elapsed_s=200.0 launches=794228 checks=199 mismatches=0
+progress elapsed_s=210.0 launches=831721 checks=209 mismatches=0
+progress elapsed_s=220.0 launches=868456 checks=219 mismatches=0
+progress elapsed_s=230.0 launches=906150 checks=229 mismatches=0
+progress elapsed_s=240.0 launches=944867 checks=239 mismatches=0
+progress elapsed_s=250.0 launches=982020 checks=249 mismatches=0
+progress elapsed_s=260.0 launches=1019563 checks=259 mismatches=0
+progress elapsed_s=270.0 launches=1056966 checks=269 mismatches=0
+progress elapsed_s=280.0 launches=1097315 checks=279 mismatches=0
+progress elapsed_s=290.0 launches=1136564 checks=289 mismatches=0
+COMPUTE elapsed_s=300.008 launches=1174915 gpu_total_ms=228871.422
+kernel_average_ms=0.194798 kernel_effective_GFLOPs=11024.141 wall_effective_GFLOPs=8410.145
+kernel_min_ms=0.163552 kernel_max_ms=5.742592 lab_stop_threshold_ms=250
+checks=300 checked_values=629145600 mismatches=0 max_abs_error=0 tolerance=0
+RESULT=PASS CUDA_API_errors=0

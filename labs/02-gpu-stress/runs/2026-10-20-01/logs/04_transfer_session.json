@@ -1,0 +1,22 @@
+{
+  "label": "04_transfer",
+  "mode": "transfer",
+  "requested_seconds": 1,
+  "mib": 64,
+  "started": "2026-10-20T18:14:41.1031523+08:00",
+  "finished": "2026-10-20T18:14:42.2723651+08:00",
+  "exit_code": 0,
+  "stop_reason": "completed",
+  "temperature_stop_c": 82,
+  "executable": "E:\\QC\\cpu_gpu_api_stress_20261020\\lab\\bin\\api_stress.exe",
+  "arguments": [
+    "transfer",
+    "--seconds",
+    "1",
+    "--mib",
+    "64",
+    "--csv",
+    "E:\\QC\\cpu_gpu_api_stress_20261020\\results\\04_transfer_metrics.csv"
+  ],
+  "sha256": "0c050a9bfbb2e1674ab07955ddf28f848d38d36259db08f2a312b801375715d5"
+}

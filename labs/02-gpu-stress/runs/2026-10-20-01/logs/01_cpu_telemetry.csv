@@ -1,0 +1,2 @@
+timestamp, temperature.gpu, utilization.gpu [%], utilization.memory [%], memory.used [MiB], power.draw [W], clocks.current.graphics [MHz], clocks.current.memory [MHz], pstate
+2026/10/20 18:14:36.039, 41, 0, 0

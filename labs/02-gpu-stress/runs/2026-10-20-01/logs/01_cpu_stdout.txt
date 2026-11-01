@@ -1,0 +1,7 @@
+C / CUDA Driver API laboratory
+Local_time=2026-10-20 18:14:34 host_compiler=194134123 C_mode=1 CUDA_header=12060
+Command: E:\QC\cpu_gpu_api_stress_20261020\lab\bin\api_stress.exe cpu --seconds 1 --mib 64 --csv E:\QC\cpu_gpu_api_stress_20261020\results\01_cpu_metrics.csv
+CPU logical_processors=32 worker_threads=4
+CPU VirtualAlloc_bytes=16777216 completed=4 sum=2145386496 expected=2145386496
+CPU thread_work_and_wait_ms=0.878800 mismatches=0
+RESULT=PASS CUDA_API_errors=0

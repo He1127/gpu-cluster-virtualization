@@ -1,0 +1,23 @@
+C / CUDA Driver API laboratory
+Local_time=2026-10-20 18:14:42 host_compiler=194134123 C_mode=1 CUDA_header=12060
+Command: E:\QC\cpu_gpu_api_stress_20261020\lab\bin\api_stress.exe compute --seconds 60 --mib 64 --csv E:\QC\cpu_gpu_api_stress_20261020\results\05_warmup60_metrics.csv
+ACLineStatus=1 (1=AC 0=battery 255=unknown)
+GPU: NVIDIA GeForce RTX 4060 Laptop GPU
+Device_count=1 compute_capability=8.9 SMs=24
+Global_memory_MiB=8188 driver_API_version=12060 nominal_clock_kHz=1890000
+COMPUTE threads=262144 accumulators=8 FMA_loops=512 FLOP_per_launch=2147483648 output_MiB=8.0
+Reference: CPU fmaf, 4 seeds, 64 input patterns; exact full-output comparison every ~1s.
+Comparison tolerance=0 (exact finite float values), any unequal value stops.
+requested_seconds=60.0 grid=1024 block=256 stop_file=STOP
+Every launch is followed by an event wait; each kernel is bounded. Ctrl+C or stop_file cancels.
+Warmup_correctness=PASS validated_seed_count=4 (excluded from timed counters)
+progress elapsed_s=10.0 launches=44303 checks=9 mismatches=0
+progress elapsed_s=20.0 launches=83881 checks=19 mismatches=0
+progress elapsed_s=30.0 launches=124903 checks=29 mismatches=0
+progress elapsed_s=40.0 launches=164242 checks=39 mismatches=0
+progress elapsed_s=50.0 launches=203001 checks=49 mismatches=0
+COMPUTE elapsed_s=60.008 launches=243265 gpu_total_ms=46302.786
+kernel_average_ms=0.190339 kernel_effective_GFLOPs=11282.423 wall_effective_GFLOPs=8705.641
+kernel_min_ms=0.162816 kernel_max_ms=4.209824 lab_stop_threshold_ms=250
+checks=60 checked_values=125829120 mismatches=0 max_abs_error=0 tolerance=0
+RESULT=PASS CUDA_API_errors=0

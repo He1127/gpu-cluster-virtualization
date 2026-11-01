@@ -1,0 +1,23 @@
+CPU/GPU formal results 2026-10-20
+Source: saved stdout / metrics / telemetry / session
+All 7 stages: PASS   CUDA API errors: 0
+Same frozen executable: YES
+
+CPU: threads=4 sum=2145386496 errors=0
+VECTOR: N=1048576 kernel=0.066560 ms errors=0
+TRANSFER (64 MiB x12, GB/s):
+pageable HtoD=9.699 DtoH=9.678
+pinned HtoD=12.027 DtoH=12.703
+DtoD payload=114.385 errors=0
+
+Stage       seconds  GPU_rate   Wall_rate errors
+compute60    60.008  11282.423  8705.641 0
+compute300  300.008  11024.141  8410.145 0
+memory120   120.140    228.047   182.394 0
+compute: GFLOP/s; memory: GB/s
+
+Telemetry: process window, ~1 second sampling
+Stage       max_C mean_GPU_pct mean_power_W
+compute60      59       66.817       48.363
+compute300     62       65.276       48.505
+memory120      55       80.274       45.835

@@ -1,0 +1,3 @@
+api_stress.c
+C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\include\cuda.h(22252): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\include\cuda.h(22958): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失

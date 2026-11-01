@@ -1,0 +1,10 @@
+C / CUDA Driver API laboratory
+Local_time=2026-10-20 18:14:38 host_compiler=194134123 C_mode=1 CUDA_header=12060
+Command: E:\QC\cpu_gpu_api_stress_20261020\lab\bin\api_stress.exe vector --seconds 1 --mib 64 --csv E:\QC\cpu_gpu_api_stress_20261020\results\03_vector_metrics.csv
+ACLineStatus=1 (1=AC 0=battery 255=unknown)
+GPU: NVIDIA GeForce RTX 4060 Laptop GPU
+Device_count=1 compute_capability=8.9 SMs=24
+Global_memory_MiB=8188 driver_API_version=12060 nominal_clock_kHz=1890000
+VECTOR n=1048576 kernel_ms=0.066560 checked=1048576 mismatches=0
+sample: C[0]=0.00 C[1]=1.25 C[last]=1026.75
+RESULT=PASS CUDA_API_errors=0

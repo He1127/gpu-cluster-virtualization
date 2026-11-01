@@ -1,0 +1,15 @@
+C / CUDA Driver API laboratory
+Local_time=2026-10-20 18:14:41 host_compiler=194134123 C_mode=1 CUDA_header=12060
+Command: E:\QC\cpu_gpu_api_stress_20261020\lab\bin\api_stress.exe transfer --seconds 1 --mib 64 --csv E:\QC\cpu_gpu_api_stress_20261020\results\04_transfer_metrics.csv
+ACLineStatus=1 (1=AC 0=battery 255=unknown)
+GPU: NVIDIA GeForce RTX 4060 Laptop GPU
+Device_count=1 compute_capability=8.9 SMs=24
+Global_memory_MiB=8188 driver_API_version=12060 nominal_clock_kHz=1890000
+TRANSFER size_MiB=64 repeats=12 timing=QPC_sync_calls_plus_CtxSynchronize
+pageable_HtoD     elapsed_ms=83.029 effective_GBps=9.699 cumulative_mismatches=0
+pageable_DtoH     elapsed_ms=83.206 effective_GBps=9.678 cumulative_mismatches=0
+pinned_HtoD       elapsed_ms=66.961 effective_GBps=12.027 cumulative_mismatches=0
+pinned_DtoH       elapsed_ms=63.393 effective_GBps=12.703 cumulative_mismatches=0
+DtoD              elapsed_ms=7.040 copied_payload_GBps=114.385 mismatches=0
+DtoD counts copied payload once; a read+write traffic convention would be twice this number.
+RESULT=PASS CUDA_API_errors=0

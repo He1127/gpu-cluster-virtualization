@@ -1,0 +1,72 @@
+CPU/GPU 本机运行结果汇总
+生成时间：2026-10-20T18:23:26.341399+08:00
+数据：只读取现有 session / metrics / telemetry / stdout；缺失项保留 N/A。
+采样窗口：每阶段进程运行期间，含初始化/参考计算/校验；不是精确稳态区间。
+
+01_cpu  complete_pass
+  RESULT=PASS exit=0 CUDA_errors=0
+  mismatches=0; checked=4194304 values
+  温度 [min/mean/max]=N/A/N/A/N/A C; samples=0 valid=0 N/A=0
+  GPU利用率 [min/mean/max]=N/A/N/A/N/A %; samples=0 valid=0 N/A=0
+  功耗 [min/mean/max]=N/A/N/A/N/A W; samples=0 valid=0 N/A=0
+  图形频率 [min/mean/max]=N/A/N/A/N/A MHz; samples=0 valid=0 N/A=0
+
+02_info  complete_pass
+  RESULT=PASS exit=0 CUDA_errors=0
+  mismatches=N/A; checked=N/A values
+  温度 [min/mean/max]=41.000/41.000/41.000 C; samples=3 valid=3 N/A=0
+  GPU利用率 [min/mean/max]=0.000/0.000/0.000 %; samples=3 valid=3 N/A=0
+  功耗 [min/mean/max]=1.200/7.357/10.540 W; samples=3 valid=3 N/A=0
+  图形频率 [min/mean/max]=1890.000/1890.000/1890.000 MHz; samples=3 valid=3 N/A=0
+
+03_vector  complete_pass
+  RESULT=PASS exit=0 CUDA_errors=0
+  mismatches=0; checked=1048576 values
+  温度 [min/mean/max]=41.000/41.500/42.000 C; samples=2 valid=2 N/A=0
+  GPU利用率 [min/mean/max]=0.000/0.000/0.000 %; samples=2 valid=2 N/A=0
+  功耗 [min/mean/max]=10.360/10.425/10.490 W; samples=2 valid=2 N/A=0
+  图形频率 [min/mean/max]=1890.000/1890.000/1890.000 MHz; samples=2 valid=2 N/A=0
+
+04_transfer  complete_pass
+  RESULT=PASS exit=0 CUDA_errors=0
+  mismatches=0; checked=469762048 bytes
+  温度 [min/mean/max]=42.000/42.000/42.000 C; samples=1 valid=1 N/A=0
+  GPU利用率 [min/mean/max]=0.000/0.000/0.000 %; samples=1 valid=1 N/A=0
+  功耗 [min/mean/max]=10.200/10.200/10.200 W; samples=1 valid=1 N/A=0
+  图形频率 [min/mean/max]=1890.000/1890.000/1890.000 MHz; samples=1 valid=1 N/A=0
+
+05_warmup60  complete_pass
+  RESULT=PASS exit=0 CUDA_errors=0
+  final_kernel_rate: 11282.423 GFLOP/s; elapsed=60.008 s
+  final_wall_rate: 8705.641 GFLOP/s; elapsed=60.008 s
+  mismatches=0; checked=125829120 values
+  温度 [min/mean/max]=42.000/55.200/59.000 C; samples=60 valid=60 N/A=0
+  GPU利用率 [min/mean/max]=0.000/66.817/93.000 %; samples=60 valid=60 N/A=0
+  功耗 [min/mean/max]=15.580/48.363/60.370 W; samples=60 valid=60 N/A=0
+  图形频率 [min/mean/max]=2655.000/2655.500/2670.000 MHz; samples=60 valid=60 N/A=0
+
+06_compute300  complete_pass
+  RESULT=PASS exit=0 CUDA_errors=0
+  final_kernel_rate: 11024.141 GFLOP/s; elapsed=300.008 s
+  final_wall_rate: 8410.145 GFLOP/s; elapsed=300.008 s
+  mismatches=0; checked=629145600 values
+  温度 [min/mean/max]=50.000/58.425/62.000 C; samples=294 valid=294 N/A=0
+  GPU利用率 [min/mean/max]=0.000/65.276/94.000 %; samples=294 valid=294 N/A=0
+  功耗 [min/mean/max]=22.670/48.505/61.500 W; samples=294 valid=294 N/A=0
+  图形频率 [min/mean/max]=2655.000/2655.000/2655.000 MHz; samples=294 valid=294 N/A=0
+
+07_memory120  complete_pass
+  RESULT=PASS exit=0 CUDA_errors=0
+  final_kernel_rate: 228.047 GB/s; elapsed=120.140 s
+  final_wall_rate: 182.394 GB/s; elapsed=120.140 s
+  mismatches=0; checked=4026531840 values
+  温度 [min/mean/max]=51.000/53.957/55.000 C; samples=117 valid=117 N/A=0
+  GPU利用率 [min/mean/max]=0.000/80.274/99.000 %; samples=117 valid=117 N/A=0
+  功耗 [min/mean/max]=28.760/45.835/52.330 W; samples=117 valid=117 N/A=0
+  图形频率 [min/mean/max]=2655.000/2655.000/2655.000 MHz; samples=117 valid=117 N/A=0
+
+说明：
+1. progress 为累计记录，不能加总为总次数或总校验量。
+2. transfer 的 checked_values 列按字节计数；DtoD速率将复制负载字节仅计算一次。
+3. GPU事件速率与端到端速率分别报告；当前示例核函数测值不是显卡官方峰值。
+4. 具体错误、缺失文件或版本不一致信息见 summary.json 的 warnings。

@@ -1,0 +1,22 @@
+{
+  "label": "07_memory120",
+  "mode": "memory",
+  "requested_seconds": 120,
+  "mib": 128,
+  "started": "2026-10-20T18:20:44.2942487+08:00",
+  "finished": "2026-10-20T18:22:45.9749777+08:00",
+  "exit_code": 0,
+  "stop_reason": "completed",
+  "temperature_stop_c": 82,
+  "executable": "E:\\QC\\cpu_gpu_api_stress_20261020\\lab\\bin\\api_stress.exe",
+  "arguments": [
+    "memory",
+    "--seconds",
+    "120",
+    "--mib",
+    "128",
+    "--csv",
+    "E:\\QC\\cpu_gpu_api_stress_20261020\\results\\07_memory120_metrics.csv"
+  ],
+  "sha256": "0c050a9bfbb2e1674ab07955ddf28f848d38d36259db08f2a312b801375715d5"
+}

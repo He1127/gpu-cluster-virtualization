@@ -1,0 +1,28 @@
+C / CUDA Driver API laboratory
+Local_time=2026-10-20 18:20:44 host_compiler=194134123 C_mode=1 CUDA_header=12060
+Command: E:\QC\cpu_gpu_api_stress_20261020\lab\bin\api_stress.exe memory --seconds 120 --mib 128 --csv E:\QC\cpu_gpu_api_stress_20261020\results\07_memory120_metrics.csv
+ACLineStatus=1 (1=AC 0=battery 255=unknown)
+GPU: NVIDIA GeForce RTX 4060 Laptop GPU
+Device_count=1 compute_capability=8.9 SMs=24
+Global_memory_MiB=8188 driver_API_version=12060 nominal_clock_kHz=1890000
+MEMORY per_array_MiB=128 arrays=3 elements=33554432 traffic_bytes_per_launch=402653184
+C[i]=A[i]+2*B[i]; two reads + one write; exact full-array check every ~1s.
+requested_seconds=120.0 grid=131072 block=256 stop_file=STOP
+Every launch is followed by an event wait; each kernel is bounded. Ctrl+C or stop_file cancels.
+Warmup_correctness=PASS validated_seed_count=1 (excluded from timed counters)
+progress elapsed_s=10.0 launches=4854 checks=9 mismatches=0
+progress elapsed_s=20.0 launches=9438 checks=19 mismatches=0
+progress elapsed_s=30.0 launches=13983 checks=29 mismatches=0
+progress elapsed_s=40.0 launches=18449 checks=39 mismatches=0
+progress elapsed_s=50.0 launches=22978 checks=49 mismatches=0
+progress elapsed_s=60.0 launches=27080 checks=59 mismatches=0
+progress elapsed_s=70.0 launches=31705 checks=69 mismatches=0
+progress elapsed_s=80.0 launches=36203 checks=79 mismatches=0
+progress elapsed_s=90.0 launches=40711 checks=89 mismatches=0
+progress elapsed_s=100.0 launches=45255 checks=99 mismatches=0
+progress elapsed_s=110.0 launches=49810 checks=109 mismatches=0
+MEMORY elapsed_s=120.140 launches=54421 gpu_total_ms=96088.727
+kernel_average_ms=1.765655 kernel_effective_GBps=228.047 wall_effective_GBps=182.394
+kernel_min_ms=1.660928 kernel_max_ms=7.073792 lab_stop_threshold_ms=250
+checks=120 checked_values=4026531840 mismatches=0 max_abs_error=0 tolerance=0
+RESULT=PASS CUDA_API_errors=0

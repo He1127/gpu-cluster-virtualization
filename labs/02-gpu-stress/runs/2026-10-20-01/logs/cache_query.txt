@@ -1,0 +1,2 @@
+cuDeviceGetAttribute(CU_DEVICE_ATTRIBUTE_L2_CACHE_SIZE=38, device=0)
+CUresult=0 L2_cache_bytes=33554432 L2_cache_MiB=32.000

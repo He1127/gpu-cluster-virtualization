@@ -1,0 +1,1773 @@
+{
+  "title": "CPU/GPU 主要调用函数与参数参考",
+  "reviewed_on": "2026-10-20",
+  "scope": "Windows x64 / C 主机程序 / CUDA Driver API 12.6",
+  "counts": {
+    "total": 60,
+    "win32": 25,
+    "cuda_driver": 35
+  },
+  "scope_and_notes": [
+    "范围：本机 Windows x64 + C 主机程序 + NVIDIA CUDA Driver API 12.6；60 项主要接口覆盖线程、同步、主机内存、计时、设备、上下文、模块、显存、传输、核函数、流、事件、错误。不是穷尽所有操作系统、厂商或 CUDA 接口。图形渲染、视频编解码、完整图执行、IPC、多 GPU/分布式、NVML 监控接口属于后续专题。",
+    "这是一份接口参考，不等于60项均在本次执行。报告中的本次实测范围应另按源码和日志标注。",
+    "in/out 描述调用接口参数如何传递；例如 dst 指针本身以值传入，指向的数据区被写入。返回状态与通过 out 指针取得的数据/句柄是不同通道。",
+    "本文件原型采用便于阅读的参数名；导出符号可能因 cuda.h 的版本宏映射为 *_v2 等，编译以安装的头文件和库为准。",
+    "标准 C 的加减乘除通常被编译为 CPU 指令在用户态执行，不需要每次先调用操作系统。线程创建、阻塞、内存管理等由 Win32 接口请求系统服务；Windows 内核调度线程。",
+    "GPU kernel（核函数）不是 Windows kernel（操作系统内核）。主机 C → CUDA Driver API → NVIDIA 用户态/内核态驱动与 Windows 图形调度设施 → GPU 执行；每个 cu* 调用不一定都立即进入内核或提交独立硬件任务。",
+    "CPU C 源码由 MSVC 编译为 x64 机器码；CUDA .cu 核函数由 nvcc 编译成 PTX/设备二进制 cubin。PTX 是虚拟指令集，SASS 是特定 GPU 的机器指令反汇编表示；PTX 也可由驱动 JIT 编译。不能把 CPU 指令直接接到 GPU 指令上执行。",
+    "主机用 /TC 作为 C 编译；.cu 文件仍使用 CUDA C++ 工具链，可用 extern \"C\" 导出稳定核函数名。这不代表整个程序只有标准 C 编译器就能完成构建。",
+    "cuLaunchKernel 返回 CUDA_SUCCESS 仅说明本次提交调用成功；之后的同步/复制仍可能报告异步执行错误。所有返回状态都需检查，最后再校验输出数组。",
+    "Async 不是永不阻塞的承诺，没有 Async 也不保证等待 GPU 完成。尤其 cuMemcpyDtoD 不做主机侧同步；需要使用事件/流同步界定完成。",
+    "同一流中按提交顺序执行。不同流是否重叠受依赖、设备资源、锁页传输和硬件支持影响；创建两个流不等于获得两块物理 GPU。",
+    "释放顺序：完成/校验 → 事件 → 流 → 设备/锁页主机内存 → 模块 → 上下文；即使释放接口有隐式行为，也不能省掉对运行结果的等待和检查。"
+  ],
+  "explanations": {
+    "cpu_chain": "C 主线程把数组分片 → CreateThread 把入口地址与分片参数交给 Windows → Windows 让工作线程在允许的逻辑处理器上执行 → 每个线程用普通 CPU 指令累加自己的分片 → 主线程 WaitForMultipleObjects → 汇总各分片并检查参考值 → CloseHandle。",
+    "gpu_chain": "主机 C 调用 cuInit、选设备、建立上下文 → 加载 nvcc 生成的 cubin → 分配设备数组并上传输入 → 取 CUfunction → cuLaunchKernel 提交线程网格和参数 → GPU 每个线程处理自己的元素/矩阵块 → 事件或流同步并检查错误 → 读回数组与 CPU 参考比较 → 成对释放。",
+    "args_example": "CUdeviceptr a,b,c; unsigned int n; void *args[]={&a,&b,&c,&n}; args[0] 是主机变量 a 的地址；a 的数值才是设备地址。驱动按核函数声明复制参数值，GPU 再用设备地址访问显存。",
+    "completion": "操作步骤告诉读者如何重现；源代码片段说明写了什么；调用顺序说明如何发出工作；PASS 需要退出码、API 状态和数值校验支持；截图只是这些原始结果的可见记录。",
+    "performance": "GFLOP/s=实际定义的浮点操作数/秒/10^9；FMA 计2次操作。GB/s=约定读写字节数/秒/10^9。核函数事件时间、主机端到端时间和传输时间分别报告。简单示例内核测得的吞吐不能称为显卡峰值算力。",
+    "stress": "压力测试需要固定问题规模、持续时间、数据类型、种子、预热/重复方式和停止条件；同时记录温度、功耗、利用率等可支持项。采样项不支持应写 N/A，不能当作0。无错误完成一段测试只说明该条件和时长内未发现错误。"
+  },
+  "functions": [
+    {
+      "number": 1,
+      "name": "GetSystemInfo",
+      "platform": "Win32 / CPU",
+      "category": "CPU 信息",
+      "purpose": "查询页大小、体系结构等系统基本信息。",
+      "prototype": "void GetSystemInfo(LPSYSTEM_INFO info);",
+      "parameters": [
+        {
+          "name": "info",
+          "direction": "out",
+          "description": "调用者提供 SYSTEM_INFO，函数写入系统信息。",
+          "unit": "无"
+        }
+      ],
+      "returns": "无返回值。",
+      "synchronization": "查询操作；不等待工作线程。",
+      "lifetime": "结构体由调用者管理。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getsysteminfo",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 2,
+      "name": "GetActiveProcessorCount",
+      "platform": "Win32 / CPU",
+      "category": "CPU 信息",
+      "purpose": "统计某处理器组或全系统活动逻辑处理器。",
+      "prototype": "DWORD GetActiveProcessorCount(WORD group);",
+      "parameters": [
+        {
+          "name": "group",
+          "direction": "in",
+          "description": "组号；ALL_PROCESSOR_GROUPS 表示所有组。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回处理器数量；0 表示失败，可读 GetLastError。",
+      "synchronization": "查询操作。",
+      "lifetime": "无资源释放。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getactiveprocessorcount",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 3,
+      "name": "CreateThread",
+      "platform": "Win32 / CPU",
+      "category": "线程",
+      "purpose": "创建执行指定 C 函数的 Windows 线程。",
+      "prototype": "HANDLE CreateThread(LPSECURITY_ATTRIBUTES attrs, SIZE_T stackBytes, LPTHREAD_START_ROUTINE entry, LPVOID arg, DWORD flags, LPDWORD threadId);",
+      "parameters": [
+        {
+          "name": "attrs",
+          "direction": "in，可空",
+          "description": "安全/继承属性，NULL 使用默认值。",
+          "unit": "无"
+        },
+        {
+          "name": "stackBytes",
+          "direction": "in",
+          "description": "0 使用可执行文件默认栈设置。",
+          "unit": "字节"
+        },
+        {
+          "name": "entry",
+          "direction": "in",
+          "description": "线程入口：DWORD WINAPI worker(LPVOID)。",
+          "unit": "无"
+        },
+        {
+          "name": "arg",
+          "direction": "in，可空",
+          "description": "传给入口的指针；所指数据在线程使用期间必须有效。",
+          "unit": "无"
+        },
+        {
+          "name": "flags",
+          "direction": "in",
+          "description": "0 立即就绪；CREATE_SUSPENDED 需再恢复。",
+          "unit": "无"
+        },
+        {
+          "name": "threadId",
+          "direction": "out，可空",
+          "description": "线程编号；它不是线程句柄。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回新线程 HANDLE；NULL 失败并读 GetLastError。入口函数的 DWORD 返回值另用 GetExitCodeThread 获取。",
+      "synchronization": "创建成功不等于线程计算完成；新线程甚至可能在 CreateThread 返回前执行。",
+      "lifetime": "实句柄最终 CloseHandle；参数/结果缓冲区在线程结束前保留。线程内使用 CRT 时优先选 _beginthreadex。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createthread",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 4,
+      "name": "WaitForSingleObject",
+      "platform": "Win32 / CPU",
+      "category": "等待",
+      "purpose": "等待线程、事件等一个对象。",
+      "prototype": "DWORD WaitForSingleObject(HANDLE object, DWORD timeoutMs);",
+      "parameters": [
+        {
+          "name": "object",
+          "direction": "in",
+          "description": "需有 SYNCHRONIZE 权限的对象句柄。",
+          "unit": "无"
+        },
+        {
+          "name": "timeoutMs",
+          "direction": "in",
+          "description": "0 只检查；INFINITE 无限等待。",
+          "unit": "毫秒"
+        }
+      ],
+      "returns": "WAIT_OBJECT_0：满足；WAIT_TIMEOUT：超时；WAIT_FAILED：错误并读 GetLastError；互斥对象还可能 WAIT_ABANDONED。",
+      "synchronization": "不满足时阻塞调用线程；等待线程句柄成功才表示该线程已退出。",
+      "lifetime": "等待未结束前不可关闭正在等待的句柄。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitforsingleobject",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 5,
+      "name": "WaitForMultipleObjects",
+      "platform": "Win32 / CPU",
+      "category": "等待",
+      "purpose": "等待多个工作线程或事件。",
+      "prototype": "DWORD WaitForMultipleObjects(DWORD count, const HANDLE *objects, BOOL all, DWORD timeoutMs);",
+      "parameters": [
+        {
+          "name": "count",
+          "direction": "in",
+          "description": "1 至 MAXIMUM_WAIT_OBJECTS；不能为 0。",
+          "unit": "个"
+        },
+        {
+          "name": "objects",
+          "direction": "in",
+          "description": "不含重复句柄的数组。",
+          "unit": "无"
+        },
+        {
+          "name": "all",
+          "direction": "in",
+          "description": "TRUE 全部满足；FALSE 任一满足。",
+          "unit": "无"
+        },
+        {
+          "name": "timeoutMs",
+          "direction": "in",
+          "description": "超时长度或 INFINITE。",
+          "unit": "毫秒"
+        }
+      ],
+      "returns": "成功返回 WAIT_OBJECT_0 至 WAIT_OBJECT_0+count-1；任一等待时差值为数组下标；也可能超时、WAIT_FAILED 或废弃互斥状态。",
+      "synchronization": "不满足时阻塞；all=TRUE 适合汇总多个计算线程。",
+      "lifetime": "数组与句柄在等待结束前有效，结束后逐个 CloseHandle。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitformultipleobjects",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 6,
+      "name": "GetExitCodeThread",
+      "platform": "Win32 / CPU",
+      "category": "线程",
+      "purpose": "读取线程退出码。",
+      "prototype": "BOOL GetExitCodeThread(HANDLE thread, LPDWORD exitCode);",
+      "parameters": [
+        {
+          "name": "thread",
+          "direction": "in",
+          "description": "有查询权限的线程句柄。",
+          "unit": "无"
+        },
+        {
+          "name": "exitCode",
+          "direction": "out",
+          "description": "线程的 DWORD 退出码；未退出为 STILL_ACTIVE。",
+          "unit": "无"
+        }
+      ],
+      "returns": "BOOL 非零为查询成功；0 失败。查询成功与工作计算正确是两件事。",
+      "synchronization": "不等待线程；通常先成功等待线程再查询。",
+      "lifetime": "先查询再 CloseHandle；不要把工作退出码设为 STILL_ACTIVE(259)。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getexitcodethread",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 7,
+      "name": "CloseHandle",
+      "platform": "Win32 / CPU",
+      "category": "资源回收",
+      "purpose": "关闭拥有的 Win32 对象句柄。",
+      "prototype": "BOOL CloseHandle(HANDLE handle);",
+      "parameters": [
+        {
+          "name": "handle",
+          "direction": "in",
+          "description": "CreateThread/CreateEventW 等返回的实句柄。",
+          "unit": "无"
+        }
+      ],
+      "returns": "非零成功；0 失败并读 GetLastError。",
+      "synchronization": "关闭线程句柄不会停止线程或等待线程结束。",
+      "lifetime": "每个拥有的实句柄关闭一次；不要关闭 GetCurrentThread 的伪句柄。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/handleapi/nf-handleapi-closehandle",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 8,
+      "name": "GetCurrentThread",
+      "platform": "Win32 / CPU",
+      "category": "线程",
+      "purpose": "取得表示调用线程的伪句柄。",
+      "prototype": "HANDLE GetCurrentThread(void);",
+      "parameters": [],
+      "returns": "返回当前调用线程的伪句柄。",
+      "synchronization": "立即返回；交给另一个线程使用时将代表另一个线程自身。",
+      "lifetime": "伪句柄不需要 CloseHandle。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getcurrentthread",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 9,
+      "name": "SetThreadAffinityMask",
+      "platform": "Win32 / CPU",
+      "category": "调度约束",
+      "purpose": "限制线程可运行的逻辑处理器集合。",
+      "prototype": "DWORD_PTR SetThreadAffinityMask(HANDLE thread, DWORD_PTR mask);",
+      "parameters": [
+        {
+          "name": "thread",
+          "direction": "in",
+          "description": "待设置的线程句柄。",
+          "unit": "无"
+        },
+        {
+          "name": "mask",
+          "direction": "in",
+          "description": "每个置 1 位代表一个允许的逻辑处理器；必须在进程允许集合内。",
+          "unit": "位掩码"
+        }
+      ],
+      "returns": "成功返回旧掩码；0 失败并读 GetLastError。",
+      "synchronization": "影响操作系统后续线程调度；不能直接命令某条指令立刻运行。",
+      "lifetime": "记录旧掩码便于恢复；超过 64 逻辑处理器需考虑处理器组。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-setthreadaffinitymask",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 10,
+      "name": "SetThreadPriority",
+      "platform": "Win32 / CPU",
+      "category": "调度约束",
+      "purpose": "设置线程相对进程优先级。",
+      "prototype": "BOOL SetThreadPriority(HANDLE thread, int priority);",
+      "parameters": [
+        {
+          "name": "thread",
+          "direction": "in",
+          "description": "有设置权限的线程句柄。",
+          "unit": "无"
+        },
+        {
+          "name": "priority",
+          "direction": "in",
+          "description": "如 THREAD_PRIORITY_NORMAL 或 BELOW_NORMAL。",
+          "unit": "无"
+        }
+      ],
+      "returns": "非零成功；0 失败并读 GetLastError。",
+      "synchronization": "优先级影响 CPU 时间分配，不能保证独占 CPU 或固定性能。",
+      "lifetime": "无独立资源；实验使用普通优先级即可。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-setthreadpriority",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 11,
+      "name": "Sleep",
+      "platform": "Win32 / CPU",
+      "category": "让出 CPU",
+      "purpose": "暂停当前线程一段时间。",
+      "prototype": "void Sleep(DWORD timeoutMs);",
+      "parameters": [
+        {
+          "name": "timeoutMs",
+          "direction": "in",
+          "description": "0 表示让出剩余时间片的机会；非零请求等待。",
+          "unit": "毫秒"
+        }
+      ],
+      "returns": "无返回值。",
+      "synchronization": "睡眠结束后仅重新具备被调度资格，并非精确计时器。",
+      "lifetime": "无资源释放；不能代替等待计算完成。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-sleep",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 12,
+      "name": "SwitchToThread",
+      "platform": "Win32 / CPU",
+      "category": "让出 CPU",
+      "purpose": "尝试将执行机会让给其他就绪线程。",
+      "prototype": "BOOL SwitchToThread(void);",
+      "parameters": [],
+      "returns": "非零表示发生切换；0 表示未让给其他线程。",
+      "synchronization": "只尝试让出；不是等待特定任务的同步原语。",
+      "lifetime": "无资源释放。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-switchtothread",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 13,
+      "name": "CreateEventA",
+      "platform": "Win32 / CPU",
+      "category": "事件同步",
+      "purpose": "创建或打开事件对象，控制线程何时继续。",
+      "prototype": "HANDLE CreateEventA(LPSECURITY_ATTRIBUTES attrs, BOOL manualReset, BOOL initiallySet, LPCSTR name);",
+      "parameters": [
+        {
+          "name": "attrs",
+          "direction": "in，可空",
+          "description": "安全/继承属性。",
+          "unit": "无"
+        },
+        {
+          "name": "manualReset",
+          "direction": "in",
+          "description": "TRUE 手动复位；FALSE 自动复位。",
+          "unit": "无"
+        },
+        {
+          "name": "initiallySet",
+          "direction": "in",
+          "description": "TRUE 初始有信号；FALSE 初始无信号。",
+          "unit": "无"
+        },
+        {
+          "name": "name",
+          "direction": "in，可空",
+          "description": "ANSI 名称；本实验传 NULL 创建匿名事件。CreateEventW 对应 UTF-16 名称。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回事件 HANDLE；NULL 失败。打开已存在同名事件时可读到 ERROR_ALREADY_EXISTS。",
+      "synchronization": "创建本身不等待；等待方调用 WaitForSingleObject 等。",
+      "lifetime": "最终 CloseHandle。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-createeventa",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 14,
+      "name": "SetEvent",
+      "platform": "Win32 / CPU",
+      "category": "事件同步",
+      "purpose": "将事件设为有信号，允许等待线程继续。",
+      "prototype": "BOOL SetEvent(HANDLE event);",
+      "parameters": [
+        {
+          "name": "event",
+          "direction": "in",
+          "description": "具有 EVENT_MODIFY_STATE 权限的事件句柄。",
+          "unit": "无"
+        }
+      ],
+      "returns": "非零成功；0 失败并读 GetLastError。",
+      "synchronization": "唤醒不保证立即获得 CPU。自动复位通常放行一个等待线程；手动复位可放行多个。",
+      "lifetime": "用已创建事件，最后 CloseHandle。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-setevent",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 15,
+      "name": "ResetEvent",
+      "platform": "Win32 / CPU",
+      "category": "事件同步",
+      "purpose": "把手动复位事件恢复为无信号。",
+      "prototype": "BOOL ResetEvent(HANDLE event);",
+      "parameters": [
+        {
+          "name": "event",
+          "direction": "in",
+          "description": "事件句柄。",
+          "unit": "无"
+        }
+      ],
+      "returns": "非零成功；0 失败并读 GetLastError。",
+      "synchronization": "后续等待需要下一次 SetEvent。",
+      "lifetime": "不创建新资源。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-resetevent",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 16,
+      "name": "InitializeCriticalSection",
+      "platform": "Win32 / CPU",
+      "category": "临界区",
+      "purpose": "初始化进程内互斥保护结构。",
+      "prototype": "void InitializeCriticalSection(LPCRITICAL_SECTION cs);",
+      "parameters": [
+        {
+          "name": "cs",
+          "direction": "out",
+          "description": "调用者持有的 CRITICAL_SECTION 存储。",
+          "unit": "无"
+        }
+      ],
+      "returns": "无返回值；不可按 BOOL 检查。",
+      "synchronization": "初始化必须先于所有线程使用。",
+      "lifetime": "不用后 DeleteCriticalSection；初始化前不可进入。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-initializecriticalsection",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 17,
+      "name": "EnterCriticalSection",
+      "platform": "Win32 / CPU",
+      "category": "临界区",
+      "purpose": "进入受互斥保护的代码段。",
+      "prototype": "void EnterCriticalSection(LPCRITICAL_SECTION cs);",
+      "parameters": [
+        {
+          "name": "cs",
+          "direction": "in/out",
+          "description": "已经初始化的临界区对象。",
+          "unit": "无"
+        }
+      ],
+      "returns": "无返回值。",
+      "synchronization": "若被其他线程持有，调用线程等待；同一线程可重入。",
+      "lifetime": "每次成功进入对应一次 LeaveCriticalSection。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-entercriticalsection",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 18,
+      "name": "LeaveCriticalSection",
+      "platform": "Win32 / CPU",
+      "category": "临界区",
+      "purpose": "离开受保护代码段。",
+      "prototype": "void LeaveCriticalSection(LPCRITICAL_SECTION cs);",
+      "parameters": [
+        {
+          "name": "cs",
+          "direction": "in/out",
+          "description": "必须由当前线程持有的临界区对象。",
+          "unit": "无"
+        }
+      ],
+      "returns": "无返回值。",
+      "synchronization": "释放对应的一次持有，其他等待线程才有机会进入。",
+      "lifetime": "不能替其他线程释放。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-leavecriticalsection",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 19,
+      "name": "DeleteCriticalSection",
+      "platform": "Win32 / CPU",
+      "category": "临界区",
+      "purpose": "回收临界区内部资源。",
+      "prototype": "void DeleteCriticalSection(LPCRITICAL_SECTION cs);",
+      "parameters": [
+        {
+          "name": "cs",
+          "direction": "in/out",
+          "description": "已经初始化且无人使用的临界区。",
+          "unit": "无"
+        }
+      ],
+      "returns": "无返回值。",
+      "synchronization": "不等待仍在使用它的线程；先结束全部使用者。",
+      "lifetime": "删除后不得继续使用，除非重新初始化。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-deletecriticalsection",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 20,
+      "name": "InterlockedIncrement",
+      "platform": "Win32 / CPU",
+      "category": "原子操作",
+      "purpose": "原子地把共享 LONG 加 1。",
+      "prototype": "LONG InterlockedIncrement(LONG volatile *value);",
+      "parameters": [
+        {
+          "name": "value",
+          "direction": "in/out",
+          "description": "按 4 字节对齐的 32 位共享 LONG。",
+          "unit": "整数"
+        }
+      ],
+      "returns": "返回增加后的值；该返回值不是错误码。",
+      "synchronization": "读改写不可被并发线程拆开；Windows 此接口提供完整内存屏障。",
+      "lifetime": "由调用者持有变量；volatile 本身不能代替原子操作。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/winnt/nf-winnt-interlockedincrement",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 21,
+      "name": "VirtualAlloc",
+      "platform": "Win32 / CPU",
+      "category": "主机内存",
+      "purpose": "在进程虚拟地址空间保留/提交可读写内存。",
+      "prototype": "LPVOID VirtualAlloc(LPVOID address, SIZE_T bytes, DWORD allocType, DWORD protection);",
+      "parameters": [
+        {
+          "name": "address",
+          "direction": "in，可空",
+          "description": "NULL 让系统选择基址。",
+          "unit": "无"
+        },
+        {
+          "name": "bytes",
+          "direction": "in",
+          "description": "请求大小，系统按页处理。",
+          "unit": "字节"
+        },
+        {
+          "name": "allocType",
+          "direction": "in",
+          "description": "常用 MEM_RESERVE | MEM_COMMIT。",
+          "unit": "无"
+        },
+        {
+          "name": "protection",
+          "direction": "in",
+          "description": "本实验用 PAGE_READWRITE。",
+          "unit": "无"
+        }
+      ],
+      "returns": "成功返回内存基址；NULL 失败并读 GetLastError。",
+      "synchronization": "创建主机虚拟内存，不是 CUDA 显存；不证明页已全部实际驻留。",
+      "lifetime": "最终 VirtualFree(base, 0, MEM_RELEASE)。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualalloc",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 22,
+      "name": "VirtualFree",
+      "platform": "Win32 / CPU",
+      "category": "主机内存",
+      "purpose": "释放 VirtualAlloc 分配。",
+      "prototype": "BOOL VirtualFree(LPVOID address, SIZE_T bytes, DWORD freeType);",
+      "parameters": [
+        {
+          "name": "address",
+          "direction": "in",
+          "description": "MEM_RELEASE 必须传原始分配基址。",
+          "unit": "无"
+        },
+        {
+          "name": "bytes",
+          "direction": "in",
+          "description": "MEM_RELEASE 时必须为 0。",
+          "unit": "字节"
+        },
+        {
+          "name": "freeType",
+          "direction": "in",
+          "description": "MEM_RELEASE 释放整块；MEM_DECOMMIT 仅取消提交。",
+          "unit": "无"
+        }
+      ],
+      "returns": "非零成功；0 失败并读 GetLastError。",
+      "synchronization": "释放前确保所有工作线程停止访问。",
+      "lifetime": "释放后指针无效；不能用来释放 cuMemAlloc 内存。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualfree",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 23,
+      "name": "QueryPerformanceCounter",
+      "platform": "Win32 / CPU",
+      "category": "主机计时",
+      "purpose": "读高分辨率计数器。",
+      "prototype": "BOOL QueryPerformanceCounter(LARGE_INTEGER *counter);",
+      "parameters": [
+        {
+          "name": "counter",
+          "direction": "out",
+          "description": "64 位计数值。",
+          "unit": "tick"
+        }
+      ],
+      "returns": "非零成功；计数值写入 counter，不是 BOOL 返回值。",
+      "synchronization": "不等待 GPU；仅测主机提交时间会遗漏异步 GPU 执行。",
+      "lifetime": "秒数=(结束tick−开始tick)/频率。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/profileapi/nf-profileapi-queryperformancecounter",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 24,
+      "name": "QueryPerformanceFrequency",
+      "platform": "Win32 / CPU",
+      "category": "主机计时",
+      "purpose": "读性能计数器频率。",
+      "prototype": "BOOL QueryPerformanceFrequency(LARGE_INTEGER *frequency);",
+      "parameters": [
+        {
+          "name": "frequency",
+          "direction": "out",
+          "description": "计数器每秒 tick 数；不等于 CPU 时钟。",
+          "unit": "tick/s"
+        }
+      ],
+      "returns": "非零成功；频率通过 out 参数写入。",
+      "synchronization": "启动时查询一次即可用于时间换算。",
+      "lifetime": "与 QueryPerformanceCounter 配套。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/profileapi/nf-profileapi-queryperformancefrequency",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 25,
+      "name": "GetLastError",
+      "platform": "Win32 / CPU",
+      "category": "错误处理",
+      "purpose": "读取当前线程记录的 Win32 错误码。",
+      "prototype": "DWORD GetLastError(void);",
+      "parameters": [],
+      "returns": "返回错误编号；不是所有接口都会更新它。",
+      "synchronization": "按对应接口文档，在检测失败后立即读取，避免被后续调用覆盖。",
+      "lifetime": "只适用于约定使用它的 Win32 接口；CUDA 错误使用 CUresult。",
+      "source": "https://learn.microsoft.com/en-us/windows/win32/api/errhandlingapi/nf-errhandlingapi-getlasterror",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 26,
+      "name": "cuInit",
+      "platform": "CUDA Driver / GPU",
+      "category": "驱动初始化",
+      "purpose": "初始化 CUDA Driver API。",
+      "prototype": "CUresult cuInit(unsigned int flags);",
+      "parameters": [
+        {
+          "name": "flags",
+          "direction": "in",
+          "description": "必须为 0。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "不作为 GPU 完成屏障。",
+      "lifetime": "无独立资源需要释放。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__INITIALIZE.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 27,
+      "name": "cuDriverGetVersion",
+      "platform": "CUDA Driver / GPU",
+      "category": "版本",
+      "purpose": "读取驱动支持的 CUDA API 版本。",
+      "prototype": "CUresult cuDriverGetVersion(int *version);",
+      "parameters": [
+        {
+          "name": "version",
+          "direction": "out",
+          "description": "整数版本编码，如 12060 表示 12.6；不等于 nvidia-smi 驱动版本号。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "不作为 GPU 完成屏障。",
+      "lifetime": "无独立资源需要释放。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__VERSION.html",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 28,
+      "name": "cuDeviceGetCount",
+      "platform": "CUDA Driver / GPU",
+      "category": "设备",
+      "purpose": "枚举可见 CUDA GPU 数量。",
+      "prototype": "CUresult cuDeviceGetCount(int *count);",
+      "parameters": [
+        {
+          "name": "count",
+          "direction": "out",
+          "description": "可见设备数。",
+          "unit": "个"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "不作为 GPU 完成屏障。",
+      "lifetime": "无独立资源需要释放。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__DEVICE.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 29,
+      "name": "cuDeviceGet",
+      "platform": "CUDA Driver / GPU",
+      "category": "设备",
+      "purpose": "按序号取得 CUDA 设备标识。",
+      "prototype": "CUresult cuDeviceGet(CUdevice *device, int ordinal);",
+      "parameters": [
+        {
+          "name": "device",
+          "direction": "out",
+          "description": "写回设备标识。",
+          "unit": "无"
+        },
+        {
+          "name": "ordinal",
+          "direction": "in",
+          "description": "0 至 count-1 的设备序号。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "不作为 GPU 完成屏障。",
+      "lifetime": "无独立资源需要释放。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__DEVICE.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 30,
+      "name": "cuDeviceGetName",
+      "platform": "CUDA Driver / GPU",
+      "category": "设备",
+      "purpose": "取得 GPU 型号名称。",
+      "prototype": "CUresult cuDeviceGetName(char *name, int capacity, CUdevice device);",
+      "parameters": [
+        {
+          "name": "name",
+          "direction": "out",
+          "description": "调用者提供的字符缓冲区。",
+          "unit": "无"
+        },
+        {
+          "name": "capacity",
+          "direction": "in",
+          "description": "缓冲区容量。",
+          "unit": "字节"
+        },
+        {
+          "name": "device",
+          "direction": "in",
+          "description": "设备标识。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "不作为 GPU 完成屏障。",
+      "lifetime": "无独立资源需要释放。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__DEVICE.html",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 31,
+      "name": "cuDeviceTotalMem",
+      "platform": "CUDA Driver / GPU",
+      "category": "设备",
+      "purpose": "查询设备全局内存总量。",
+      "prototype": "CUresult cuDeviceTotalMem(size_t *bytes, CUdevice device);",
+      "parameters": [
+        {
+          "name": "bytes",
+          "direction": "out",
+          "description": "总显存大小；不是当前空闲显存。",
+          "unit": "字节"
+        },
+        {
+          "name": "device",
+          "direction": "in",
+          "description": "设备标识。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "不作为 GPU 完成屏障。",
+      "lifetime": "无独立资源需要释放。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__DEVICE.html",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 32,
+      "name": "cuDeviceGetAttribute",
+      "platform": "CUDA Driver / GPU",
+      "category": "设备",
+      "purpose": "查询某项硬件能力。",
+      "prototype": "CUresult cuDeviceGetAttribute(int *value, CUdevice_attribute attribute, CUdevice device);",
+      "parameters": [
+        {
+          "name": "value",
+          "direction": "out",
+          "description": "属性值，单位随属性变化。",
+          "unit": "无"
+        },
+        {
+          "name": "attribute",
+          "direction": "in",
+          "description": "如 SM 数、warp 大小、最大线程数、计算能力等枚举。",
+          "unit": "无"
+        },
+        {
+          "name": "device",
+          "direction": "in",
+          "description": "设备标识。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "不作为 GPU 完成屏障。",
+      "lifetime": "无独立资源需要释放。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__DEVICE.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 33,
+      "name": "cuCtxCreate",
+      "platform": "CUDA Driver / GPU",
+      "category": "上下文",
+      "purpose": "为所选设备创建并设为本线程当前 CUDA 上下文。",
+      "prototype": "CUresult cuCtxCreate(CUcontext *context, unsigned int flags, CUdevice device);",
+      "parameters": [
+        {
+          "name": "context",
+          "direction": "out",
+          "description": "CUDA 上下文句柄。",
+          "unit": "无"
+        },
+        {
+          "name": "flags",
+          "direction": "in",
+          "description": "本实验用 0；可配置 CPU 等待 GPU 的调度策略。",
+          "unit": "无"
+        },
+        {
+          "name": "device",
+          "direction": "in",
+          "description": "选定设备标识。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "不作为 GPU 完成屏障。",
+      "lifetime": "自行创建的上下文最终 cuCtxDestroy；不要与 Runtime 的主上下文任意混用。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__CTX.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 34,
+      "name": "cuCtxSetCurrent",
+      "platform": "CUDA Driver / GPU",
+      "category": "上下文",
+      "purpose": "设置调用 CPU 线程当前使用的上下文。",
+      "prototype": "CUresult cuCtxSetCurrent(CUcontext context);",
+      "parameters": [
+        {
+          "name": "context",
+          "direction": "in，可空",
+          "description": "NULL 解除当前绑定；非空绑定指定上下文。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "不保证已有 GPU 工作完成；不同 CPU 线程需分别维护当前上下文。",
+      "lifetime": "无独立资源需要释放。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__CTX.html",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 35,
+      "name": "cuCtxSynchronize",
+      "platform": "CUDA Driver / GPU",
+      "category": "GPU 等待",
+      "purpose": "等待当前上下文中先前提交的 GPU 工作。",
+      "prototype": "CUresult cuCtxSynchronize(void);",
+      "parameters": [],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "阻塞调用 CPU 线程，等待上下文此前工作结束；还可能报告异步执行错误。",
+      "lifetime": "无独立资源需要释放。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__CTX.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 36,
+      "name": "cuCtxDestroy",
+      "platform": "CUDA Driver / GPU",
+      "category": "上下文回收",
+      "purpose": "销毁自己创建的上下文及其关联资源。",
+      "prototype": "CUresult cuCtxDestroy(CUcontext context);",
+      "parameters": [
+        {
+          "name": "context",
+          "direction": "in",
+          "description": "待销毁上下文。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "正常清理先显式等待工作结束，不能把销毁函数当作正确性验证。",
+      "lifetime": "销毁后上下文及其关联设备资源不可再用；本代码按逆序显式释放。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__CTX.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 37,
+      "name": "cuModuleLoad",
+      "platform": "CUDA Driver / GPU",
+      "category": "GPU 程序",
+      "purpose": "加载 PTX、cubin 或 fatbin 文件。",
+      "prototype": "CUresult cuModuleLoad(CUmodule *module, const char *path);",
+      "parameters": [
+        {
+          "name": "module",
+          "direction": "out",
+          "description": "模块句柄。",
+          "unit": "无"
+        },
+        {
+          "name": "path",
+          "direction": "in",
+          "description": "本机文件路径，指向已编译 GPU 程序。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "不作为 GPU 完成屏障。",
+      "lifetime": "最终 cuModuleUnload；加载 PTX 时驱动可能 JIT 生成设备机器代码。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__MODULE.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 38,
+      "name": "cuModuleGetFunction",
+      "platform": "CUDA Driver / GPU",
+      "category": "GPU 程序",
+      "purpose": "根据核函数名称取可启动的函数句柄。",
+      "prototype": "CUresult cuModuleGetFunction(CUfunction *function, CUmodule module, const char *name);",
+      "parameters": [
+        {
+          "name": "function",
+          "direction": "out",
+          "description": "核函数句柄。",
+          "unit": "无"
+        },
+        {
+          "name": "module",
+          "direction": "in",
+          "description": "已加载模块。",
+          "unit": "无"
+        },
+        {
+          "name": "name",
+          "direction": "in",
+          "description": "模块中精确的入口名称；extern \"C\" 可避免 C++ 名称修饰。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "不作为 GPU 完成屏障。",
+      "lifetime": "不单独释放 CUfunction；模块卸载后句柄失效。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__MODULE.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 39,
+      "name": "cuModuleUnload",
+      "platform": "CUDA Driver / GPU",
+      "category": "GPU 程序回收",
+      "purpose": "卸载已经加载的 GPU 模块。",
+      "prototype": "CUresult cuModuleUnload(CUmodule module);",
+      "parameters": [
+        {
+          "name": "module",
+          "direction": "in",
+          "description": "已加载模块句柄。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "先等待引用该模块的 GPU 工作结束。",
+      "lifetime": "卸载一次；相关 CUfunction 不再使用。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__MODULE.html",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 40,
+      "name": "cuMemGetInfo",
+      "platform": "CUDA Driver / GPU",
+      "category": "GPU 内存",
+      "purpose": "查询当前上下文的可用与总设备内存。",
+      "prototype": "CUresult cuMemGetInfo(size_t *freeBytes, size_t *totalBytes);",
+      "parameters": [
+        {
+          "name": "freeBytes",
+          "direction": "out",
+          "description": "当前可用内存，受其他进程/系统占用影响。",
+          "unit": "字节"
+        },
+        {
+          "name": "totalBytes",
+          "direction": "out",
+          "description": "可报告的总内存。",
+          "unit": "字节"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "不作为 GPU 完成屏障。",
+      "lifetime": "无独立资源需要释放。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__MEM.html",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 41,
+      "name": "cuMemAlloc",
+      "platform": "CUDA Driver / GPU",
+      "category": "GPU 内存",
+      "purpose": "为 GPU 数组分配设备内存。",
+      "prototype": "CUresult cuMemAlloc(CUdeviceptr *pointer, size_t bytes);",
+      "parameters": [
+        {
+          "name": "pointer",
+          "direction": "out",
+          "description": "写回设备地址；不是可在 CPU 上直接解引用的 float*。",
+          "unit": "无"
+        },
+        {
+          "name": "bytes",
+          "direction": "in",
+          "description": "元素个数×sizeof(元素类型)。",
+          "unit": "字节"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "不作为 GPU 完成屏障。",
+      "lifetime": "最终 cuMemFree；未初始化数据需另传输或写入。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__MEM.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 42,
+      "name": "cuMemFree",
+      "platform": "CUDA Driver / GPU",
+      "category": "GPU 内存回收",
+      "purpose": "释放设备内存。",
+      "prototype": "CUresult cuMemFree(CUdeviceptr pointer);",
+      "parameters": [
+        {
+          "name": "pointer",
+          "direction": "in",
+          "description": "cuMemAlloc 等相配分配的设备地址。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "先显式等待使用该地址的工作完成。",
+      "lifetime": "释放后不可继续传给复制或核函数。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__MEM.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 43,
+      "name": "cuMemHostAlloc",
+      "platform": "CUDA Driver / GPU",
+      "category": "锁页主机内存",
+      "purpose": "分配适合主机与 GPU 传输的锁页内存。",
+      "prototype": "CUresult cuMemHostAlloc(void **pointer, size_t bytes, unsigned int flags);",
+      "parameters": [
+        {
+          "name": "pointer",
+          "direction": "out",
+          "description": "CPU 可读写的主机地址。",
+          "unit": "无"
+        },
+        {
+          "name": "bytes",
+          "direction": "in",
+          "description": "分配大小。",
+          "unit": "字节"
+        },
+        {
+          "name": "flags",
+          "direction": "in",
+          "description": "0 使用默认锁页分配；可选可移植/映射/写合并等标志。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "不作为 GPU 完成屏障。",
+      "lifetime": "最终 cuMemFreeHost；它不是独立显存分配，不宜无上限占用锁页内存。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__MEM.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 44,
+      "name": "cuMemFreeHost",
+      "platform": "CUDA Driver / GPU",
+      "category": "主机内存回收",
+      "purpose": "释放 CUDA 分配的锁页主机内存。",
+      "prototype": "CUresult cuMemFreeHost(void *pointer);",
+      "parameters": [
+        {
+          "name": "pointer",
+          "direction": "in",
+          "description": "cuMemHostAlloc 等返回的主机地址。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "先等待读写该缓冲区的异步传输结束。",
+      "lifetime": "不能用 free 或 VirtualFree 代替。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__MEM.html",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 45,
+      "name": "cuMemcpyHtoD",
+      "platform": "CUDA Driver / GPU",
+      "category": "CPU→GPU 传输",
+      "purpose": "把主机数组上传到显存。",
+      "prototype": "CUresult cuMemcpyHtoD(CUdeviceptr dst, const void *src, size_t bytes);",
+      "parameters": [
+        {
+          "name": "dst",
+          "direction": "in，指向输出区",
+          "description": "已分配的设备目标地址。",
+          "unit": "无"
+        },
+        {
+          "name": "src",
+          "direction": "in",
+          "description": "主机源地址。",
+          "unit": "无"
+        },
+        {
+          "name": "bytes",
+          "direction": "in",
+          "description": "复制大小，不是元素数量。",
+          "unit": "字节"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "锁页主机源时相对主机同步；可分页源可能在暂存复制后返回。需要完整设备完成时间时显式同步。",
+      "lifetime": "不分配内存；双方容量至少为 bytes。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__MEM.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 46,
+      "name": "cuMemcpyDtoH",
+      "platform": "CUDA Driver / GPU",
+      "category": "GPU→CPU 传输",
+      "purpose": "把显存结果读回主机。",
+      "prototype": "CUresult cuMemcpyDtoH(void *dst, CUdeviceptr src, size_t bytes);",
+      "parameters": [
+        {
+          "name": "dst",
+          "direction": "in，指向输出区",
+          "description": "主机目标地址，函数写入其指向数据。",
+          "unit": "无"
+        },
+        {
+          "name": "src",
+          "direction": "in",
+          "description": "设备源地址。",
+          "unit": "无"
+        },
+        {
+          "name": "bytes",
+          "direction": "in",
+          "description": "复制大小。",
+          "unit": "字节"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "返回时该次设备到主机复制已经完成；仍检查 CUresult。",
+      "lifetime": "不分配内存，返回成功后可在 CPU 验证结果。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__MEM.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 47,
+      "name": "cuMemcpyDtoD",
+      "platform": "CUDA Driver / GPU",
+      "category": "GPU 内部传输",
+      "purpose": "在设备内存之间复制。",
+      "prototype": "CUresult cuMemcpyDtoD(CUdeviceptr dst, CUdeviceptr src, size_t bytes);",
+      "parameters": [
+        {
+          "name": "dst",
+          "direction": "in，指向输出区",
+          "description": "设备目标地址。",
+          "unit": "无"
+        },
+        {
+          "name": "src",
+          "direction": "in",
+          "description": "设备源地址。",
+          "unit": "无"
+        },
+        {
+          "name": "bytes",
+          "direction": "in",
+          "description": "有效复制字节数。",
+          "unit": "字节"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "即使名称没有 Async，也不执行主机侧同步；应显式等待再计完成时间。",
+      "lifetime": "保持源/目标有效，不能把它当成 PCIe 主机传输。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__MEM.html",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 48,
+      "name": "cuMemcpyHtoDAsync",
+      "platform": "CUDA Driver / GPU",
+      "category": "异步传输",
+      "purpose": "把 CPU→GPU 复制排入指定流。",
+      "prototype": "CUresult cuMemcpyHtoDAsync(CUdeviceptr dst, const void *src, size_t bytes, CUstream stream);",
+      "parameters": [
+        {
+          "name": "dst",
+          "direction": "in，指向输出区",
+          "description": "设备目标地址。",
+          "unit": "无"
+        },
+        {
+          "name": "src",
+          "direction": "in",
+          "description": "主机源地址，可靠传输重叠通常使用锁页内存。",
+          "unit": "无"
+        },
+        {
+          "name": "bytes",
+          "direction": "in",
+          "description": "复制大小。",
+          "unit": "字节"
+        },
+        {
+          "name": "stream",
+          "direction": "in",
+          "description": "操作排入的流。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "通常异步；可分页内存/资源条件可能导致主机阻塞。对同一流的顺序有保证。",
+      "lifetime": "完成前不可改写或释放 src，dst 亦需有效。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__MEM.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 49,
+      "name": "cuMemcpyDtoHAsync",
+      "platform": "CUDA Driver / GPU",
+      "category": "异步传输",
+      "purpose": "把 GPU→CPU 复制排入指定流。",
+      "prototype": "CUresult cuMemcpyDtoHAsync(void *dst, CUdeviceptr src, size_t bytes, CUstream stream);",
+      "parameters": [
+        {
+          "name": "dst",
+          "direction": "in，指向输出区",
+          "description": "主机目标缓冲区。",
+          "unit": "无"
+        },
+        {
+          "name": "src",
+          "direction": "in",
+          "description": "设备源地址。",
+          "unit": "无"
+        },
+        {
+          "name": "bytes",
+          "direction": "in",
+          "description": "复制大小。",
+          "unit": "字节"
+        },
+        {
+          "name": "stream",
+          "direction": "in",
+          "description": "操作排入的流。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "通常异步；读取结果前等该流或复制之后记录的事件完成。",
+      "lifetime": "完成前不读取/释放 dst，不释放 src。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__MEM.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 50,
+      "name": "cuLaunchKernel",
+      "platform": "CUDA Driver / GPU",
+      "category": "GPU 计算",
+      "purpose": "配置线程网格并提交核函数执行。",
+      "prototype": "CUresult cuLaunchKernel(CUfunction function, unsigned int gx, unsigned int gy, unsigned int gz, unsigned int bx, unsigned int by, unsigned int bz, unsigned int sharedBytes, CUstream stream, void **args, void **extra);",
+      "parameters": [
+        {
+          "name": "function",
+          "direction": "in",
+          "description": "cuModuleGetFunction 取得的入口。",
+          "unit": "无"
+        },
+        {
+          "name": "gx, gy, gz",
+          "direction": "in",
+          "description": "网格的三个维度；每个值是线程块数。",
+          "unit": "block"
+        },
+        {
+          "name": "bx, by, bz",
+          "direction": "in",
+          "description": "每个线程块的三个维度。",
+          "unit": "thread"
+        },
+        {
+          "name": "sharedBytes",
+          "direction": "in",
+          "description": "每块动态共享内存大小。",
+          "unit": "字节/block"
+        },
+        {
+          "name": "stream",
+          "direction": "in",
+          "description": "本次启动排入的流。",
+          "unit": "无"
+        },
+        {
+          "name": "args",
+          "direction": "in，可空",
+          "description": "按核函数声明顺序排列的主机指针数组；每项指向一个参数值的存放位置。",
+          "unit": "无"
+        },
+        {
+          "name": "extra",
+          "direction": "in，可空",
+          "description": "另一种参数打包方式；使用 args 时填 NULL，二者不能同时非空。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "相对主机异步；提交成功后仍需同步检查 GPU 执行错误并读回校验。",
+      "lifetime": "核函数是 void，计算结果写入所传设备数组；设备内存在 GPU 完成前有效。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__EXEC.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 51,
+      "name": "cuStreamCreate",
+      "platform": "CUDA Driver / GPU",
+      "category": "执行流",
+      "purpose": "创建按顺序执行 GPU 操作的队列。",
+      "prototype": "CUresult cuStreamCreate(CUstream *stream, unsigned int flags);",
+      "parameters": [
+        {
+          "name": "stream",
+          "direction": "out",
+          "description": "流句柄。",
+          "unit": "无"
+        },
+        {
+          "name": "flags",
+          "direction": "in",
+          "description": "0 为 CU_STREAM_DEFAULT 标志，仍创建显式新流；CU_STREAM_NON_BLOCKING 避免与 legacy 默认流隐式同步。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "不作为 GPU 完成屏障。",
+      "lifetime": "最终 cuStreamDestroy；不同流不自动保证彼此先后或一定并发。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__STREAM.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 52,
+      "name": "cuStreamSynchronize",
+      "platform": "CUDA Driver / GPU",
+      "category": "流等待",
+      "purpose": "等待指定流此前操作完成。",
+      "prototype": "CUresult cuStreamSynchronize(CUstream stream);",
+      "parameters": [
+        {
+          "name": "stream",
+          "direction": "in",
+          "description": "需要等待的流。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "阻塞主机直到该流完成；检查返回的异步执行错误。",
+      "lifetime": "无独立资源需要释放。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__STREAM.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 53,
+      "name": "cuStreamDestroy",
+      "platform": "CUDA Driver / GPU",
+      "category": "执行流回收",
+      "purpose": "销毁流句柄。",
+      "prototype": "CUresult cuStreamDestroy(CUstream stream);",
+      "parameters": [
+        {
+          "name": "stream",
+          "direction": "in",
+          "description": "自行创建的流。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "可能在排队工作尚未完成时返回，内部资源延后释放；不是完成屏障。",
+      "lifetime": "先同步、再销毁；之后不复用流句柄。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__STREAM.html",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 54,
+      "name": "cuEventCreate",
+      "platform": "CUDA Driver / GPU",
+      "category": "设备事件",
+      "purpose": "创建用于完成标记或 GPU 计时的事件。",
+      "prototype": "CUresult cuEventCreate(CUevent *event, unsigned int flags);",
+      "parameters": [
+        {
+          "name": "event",
+          "direction": "out",
+          "description": "事件句柄。",
+          "unit": "无"
+        },
+        {
+          "name": "flags",
+          "direction": "in",
+          "description": "0 启用计时；CU_EVENT_DISABLE_TIMING 的事件不能用于耗时计算。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "不作为 GPU 完成屏障。",
+      "lifetime": "最终 cuEventDestroy；计时通常需要一对开始/结束事件。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__EVENT.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 55,
+      "name": "cuEventRecord",
+      "platform": "CUDA Driver / GPU",
+      "category": "设备事件",
+      "purpose": "在流中记录一个时间点/完成标记。",
+      "prototype": "CUresult cuEventRecord(CUevent event, CUstream stream);",
+      "parameters": [
+        {
+          "name": "event",
+          "direction": "in",
+          "description": "已创建的事件。",
+          "unit": "无"
+        },
+        {
+          "name": "stream",
+          "direction": "in",
+          "description": "将事件排入此流。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "主机提交标记后返回；标记完成代表此流中它之前的工作已完成。",
+      "lifetime": "复用事件会覆盖此前记录状态。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__EVENT.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 56,
+      "name": "cuEventSynchronize",
+      "platform": "CUDA Driver / GPU",
+      "category": "事件等待",
+      "purpose": "等待事件所记录工作完成。",
+      "prototype": "CUresult cuEventSynchronize(CUevent event);",
+      "parameters": [
+        {
+          "name": "event",
+          "direction": "in",
+          "description": "已记录的事件。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "阻塞调用主机线程，等待记录点完成；适合在结束事件后读时间。",
+      "lifetime": "无独立资源需要释放。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__EVENT.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 57,
+      "name": "cuEventElapsedTime",
+      "platform": "CUDA Driver / GPU",
+      "category": "设备计时",
+      "purpose": "求两个已记录 CUDA 事件之间的时间。",
+      "prototype": "CUresult cuEventElapsedTime(float *milliseconds, CUevent start, CUevent end);",
+      "parameters": [
+        {
+          "name": "milliseconds",
+          "direction": "out",
+          "description": "写回浮点毫秒数；不是 CUresult 返回值。",
+          "unit": "毫秒"
+        },
+        {
+          "name": "start",
+          "direction": "in",
+          "description": "已完成且启用计时的开始事件。",
+          "unit": "无"
+        },
+        {
+          "name": "end",
+          "direction": "in",
+          "description": "已完成且启用计时的结束事件。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "本函数不代替等待；未完成可能返回 CUDA_ERROR_NOT_READY。",
+      "lifetime": "同一流中围住目标操作；时间可能包括中间排队/其他操作影响。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__EVENT.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 58,
+      "name": "cuEventDestroy",
+      "platform": "CUDA Driver / GPU",
+      "category": "设备事件回收",
+      "purpose": "销毁事件句柄。",
+      "prototype": "CUresult cuEventDestroy(CUevent event);",
+      "parameters": [
+        {
+          "name": "event",
+          "direction": "in",
+          "description": "自行创建的事件。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "事件未完成时也可能返回，资源延后释放；不是完成屏障。",
+      "lifetime": "销毁后不得复用句柄。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__EVENT.html",
+      "detail_level": "速查",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 59,
+      "name": "cuGetErrorName",
+      "platform": "CUDA Driver / GPU",
+      "category": "CUDA 错误",
+      "purpose": "把 CUresult 转成符号名称。",
+      "prototype": "CUresult cuGetErrorName(CUresult error, const char **name);",
+      "parameters": [
+        {
+          "name": "error",
+          "direction": "in",
+          "description": "需解释的 CUDA 状态。",
+          "unit": "无"
+        },
+        {
+          "name": "name",
+          "direction": "out",
+          "description": "写回驱动持有的只读字符串指针。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "不作为 GPU 完成屏障。",
+      "lifetime": "不释放/修改字符串；若 error 无效，本调用也可失败并写 NULL。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__ERROR.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    },
+    {
+      "number": 60,
+      "name": "cuGetErrorString",
+      "platform": "CUDA Driver / GPU",
+      "category": "CUDA 错误",
+      "purpose": "把 CUresult 转成可读错误说明。",
+      "prototype": "CUresult cuGetErrorString(CUresult error, const char **description);",
+      "parameters": [
+        {
+          "name": "error",
+          "direction": "in",
+          "description": "需解释的 CUDA 状态。",
+          "unit": "无"
+        },
+        {
+          "name": "description",
+          "direction": "out",
+          "description": "写回驱动持有的只读说明指针。",
+          "unit": "无"
+        }
+      ],
+      "returns": "返回状态 CUresult：CUDA_SUCCESS 为成功，其他值为错误；数据或句柄经标为 out 的参数写回。",
+      "synchronization": "不作为 GPU 完成屏障。",
+      "lifetime": "不释放字符串；它解释给定状态，不读取 Windows GetLastError。",
+      "source": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/group__CUDA__ERROR.html",
+      "detail_level": "常用核心",
+      "execution_status": "接口参考；是否本次实测须以独立运行日志为准"
+    }
+  ],
+  "runtime_comparison": [
+    {
+      "operation": "枚举设备",
+      "driver": "cuDeviceGetCount",
+      "runtime": "cudaGetDeviceCount",
+      "note": "Runtime 接口返回 cudaError_t，不能拿 GetLastError 解释。"
+    },
+    {
+      "operation": "选择设备/上下文",
+      "driver": "cuDeviceGet + 显式上下文管理",
+      "runtime": "cudaSetDevice",
+      "note": "概念对应而非逐行替换；Runtime 管理主上下文。"
+    },
+    {
+      "operation": "设备内存",
+      "driver": "cuMemAlloc / cuMemFree",
+      "runtime": "cudaMalloc / cudaFree",
+      "note": "保持成对分配/释放，谨慎混合 API。"
+    },
+    {
+      "operation": "复制",
+      "driver": "cuMemcpyHtoD / cuMemcpyDtoH 等",
+      "runtime": "cudaMemcpy / cudaMemcpyAsync + 方向参数",
+      "note": "同样要区分提交时间和完成时间。"
+    },
+    {
+      "operation": "启动",
+      "driver": "cuModuleLoad → cuModuleGetFunction → cuLaunchKernel",
+      "runtime": "kernel<<<grid,block,shared,stream>>>(...) 或 cudaLaunchKernel",
+      "note": "<<<>>> 是 CUDA C++ 扩展语法，纯 C 源码不直接支持。"
+    },
+    {
+      "operation": "完成等待",
+      "driver": "cuCtxSynchronize / cuStreamSynchronize",
+      "runtime": "cudaDeviceSynchronize / cudaStreamSynchronize",
+      "note": "同步后仍需验证计算值是否正确。"
+    },
+    {
+      "operation": "事件计时",
+      "driver": "cuEventCreate/Record/ElapsedTime",
+      "runtime": "cudaEventCreate/Record/ElapsedTime",
+      "note": "GPU 事件给出设备时间，QPC 可测完整主机端到端时间。"
+    }
+  ],
+  "sources": [
+    {
+      "title": "Microsoft：进程与线程",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/procthread/about-processes-and-threads"
+    },
+    {
+      "title": "Microsoft：线程接口索引",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/procthread/process-and-thread-functions"
+    },
+    {
+      "title": "NVIDIA：CUDA Driver API 12.6 总目录",
+      "url": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/index.html"
+    },
+    {
+      "title": "NVIDIA：API 同步行为",
+      "url": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/api-sync-behavior.html"
+    },
+    {
+      "title": "NVIDIA：Driver 与 Runtime 区别",
+      "url": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-driver-api/driver-vs-runtime-api.html"
+    },
+    {
+      "title": "NVIDIA：CUDA C++ 编程指南 12.6",
+      "url": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-c-programming-guide/index.html"
+    },
+    {
+      "title": "NVIDIA：PTX ISA 8.5",
+      "url": "https://docs.nvidia.com/cuda/archive/12.6.0/parallel-thread-execution/index.html"
+    },
+    {
+      "title": "NVIDIA：CUDA Binary Utilities",
+      "url": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-binary-utilities/index.html"
+    },
+    {
+      "title": "NVIDIA：Runtime 设备接口",
+      "url": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-runtime-api/group__CUDART__DEVICE.html"
+    },
+    {
+      "title": "NVIDIA：Runtime 内存接口",
+      "url": "https://docs.nvidia.com/cuda/archive/12.6.0/cuda-runtime-api/group__CUDART__MEMORY.html"
+    }
+  ],
+  "local_header_checked": "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6/include/cuda.h"
+}

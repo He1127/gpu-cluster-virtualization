@@ -1,0 +1,2 @@
+mode,phase,elapsed_s,iterations,gpu_ms,metric,units,errors,checked_values
+vector,vector_add,0.319234100,1,0.066560,0.000000,none,0,1048576

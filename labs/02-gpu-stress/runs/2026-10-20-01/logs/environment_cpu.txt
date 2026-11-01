@@ -1,0 +1,5 @@
+
+Name                      : Intel(R) Core(TM) i9-14900HX
+NumberOfCores             : 24
+NumberOfLogicalProcessors : 32
+

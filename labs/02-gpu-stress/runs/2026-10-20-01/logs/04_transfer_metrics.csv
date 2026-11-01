@@ -1,0 +1,6 @@
+mode,phase,elapsed_s,iterations,gpu_ms,metric,units,errors,checked_values
+transfer,pageable_HtoD,0.083029400,12,0.000000,9.699051,GB/s,0,67108864
+transfer,pageable_DtoH,0.083205900,12,0.000000,9.678477,GB/s,0,201326592
+transfer,pinned_HtoD,0.066960600,12,0.000000,12.026570,GB/s,0,268435456
+transfer,pinned_DtoH,0.063392800,12,0.000000,12.703436,GB/s,0,402653184
+transfer,DtoD_payload,0.007040300,12,0.000000,114.385235,GB/s,0,469762048
