@@ -1,0 +1,311 @@
+{
+  "environment": {
+    "date": "2026-11-05T22:04:23.745030+08:00",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.14",
+    "logical_processors": 32,
+    "executable_sha256": "5e81f1184e233faab49f2f211c2fb2073e4362baf67104b573717ab7ecc1c3c6",
+    "source_sha256": "c67a08ade946c2740799c03812ba2620c5a1951cc6de15973f987161978945b4",
+    "mode": "full",
+    "address": "127.0.0.1"
+  },
+  "checks": [
+    {
+      "test": "task_split_merge",
+      "check": "PASS",
+      "elements": 1000003,
+      "reference": 503994136,
+      "parts": [
+        [
+          1,
+          0,
+          333334,
+          167996887,
+          167996887
+        ],
+        [
+          2,
+          333334,
+          333334,
+          167998240,
+          167998240
+        ],
+        [
+          3,
+          666668,
+          333335,
+          167999009,
+          167999009
+        ]
+      ]
+    },
+    {
+      "test": "seven_byte_io_slices",
+      "check": "PASS",
+      "elements": 1003
+    },
+    {
+      "test": "unaligned_final_chunk_both_directions",
+      "check": "PASS",
+      "payload_bytes_per_link": 1048580
+    },
+    {
+      "test": "worker1_disconnect_detected",
+      "check": "PASS",
+      "expected_application_outcome": "FAIL/nonzero"
+    }
+  ],
+  "task_parts": [
+    [
+      1,
+      0,
+      333334,
+      167996887,
+      167996887
+    ],
+    [
+      2,
+      333334,
+      333334,
+      167998240,
+      167998240
+    ],
+    [
+      3,
+      666668,
+      333335,
+      167999009,
+      167999009
+    ]
+  ],
+  "task_reference": 503994136,
+  "payload_mib_per_link": 512,
+  "repeats": 3,
+  "block_bytes": [
+    16384,
+    65536,
+    262144
+  ],
+  "measured_cases": 72,
+  "warmup_cases": 6,
+  "statistics": [
+    {
+      "direction": "down",
+      "chunk_bytes": 16384,
+      "active": 1,
+      "repeats": 3,
+      "min_GBps": 1.015165361,
+      "median_GBps": 1.017945387,
+      "max_GBps": 1.034563524
+    },
+    {
+      "direction": "down",
+      "chunk_bytes": 16384,
+      "active": 2,
+      "repeats": 3,
+      "min_GBps": 0.971457809,
+      "median_GBps": 0.982009022,
+      "max_GBps": 1.011080894
+    },
+    {
+      "direction": "down",
+      "chunk_bytes": 16384,
+      "active": 3,
+      "repeats": 3,
+      "min_GBps": 0.938024991,
+      "median_GBps": 0.938175305,
+      "max_GBps": 0.960736362
+    },
+    {
+      "direction": "down",
+      "chunk_bytes": 16384,
+      "active": 0,
+      "repeats": 3,
+      "min_GBps": 1.749466682,
+      "median_GBps": 1.760325998,
+      "max_GBps": 1.761537191
+    },
+    {
+      "direction": "down",
+      "chunk_bytes": 65536,
+      "active": 1,
+      "repeats": 3,
+      "min_GBps": 1.626846057,
+      "median_GBps": 1.867234201,
+      "max_GBps": 1.890516348
+    },
+    {
+      "direction": "down",
+      "chunk_bytes": 65536,
+      "active": 2,
+      "repeats": 3,
+      "min_GBps": 1.723093893,
+      "median_GBps": 1.760846774,
+      "max_GBps": 1.895444832
+    },
+    {
+      "direction": "down",
+      "chunk_bytes": 65536,
+      "active": 3,
+      "repeats": 3,
+      "min_GBps": 1.894910297,
+      "median_GBps": 1.909447358,
+      "max_GBps": 1.934844263
+    },
+    {
+      "direction": "down",
+      "chunk_bytes": 65536,
+      "active": 0,
+      "repeats": 3,
+      "min_GBps": 2.608702196,
+      "median_GBps": 2.611073477,
+      "max_GBps": 2.645581795
+    },
+    {
+      "direction": "down",
+      "chunk_bytes": 262144,
+      "active": 1,
+      "repeats": 3,
+      "min_GBps": 2.235479265,
+      "median_GBps": 2.567576065,
+      "max_GBps": 2.619888279
+    },
+    {
+      "direction": "down",
+      "chunk_bytes": 262144,
+      "active": 2,
+      "repeats": 3,
+      "min_GBps": 2.471264809,
+      "median_GBps": 2.551242221,
+      "max_GBps": 2.562106224
+    },
+    {
+      "direction": "down",
+      "chunk_bytes": 262144,
+      "active": 3,
+      "repeats": 3,
+      "min_GBps": 2.412405315,
+      "median_GBps": 2.527060223,
+      "max_GBps": 2.54890329
+    },
+    {
+      "direction": "down",
+      "chunk_bytes": 262144,
+      "active": 0,
+      "repeats": 3,
+      "min_GBps": 2.698071556,
+      "median_GBps": 2.711194482,
+      "max_GBps": 2.724871584
+    },
+    {
+      "direction": "up",
+      "chunk_bytes": 16384,
+      "active": 1,
+      "repeats": 3,
+      "min_GBps": 0.945695754,
+      "median_GBps": 0.949151626,
+      "max_GBps": 0.989754613
+    },
+    {
+      "direction": "up",
+      "chunk_bytes": 16384,
+      "active": 2,
+      "repeats": 3,
+      "min_GBps": 0.949206836,
+      "median_GBps": 0.94948265,
+      "max_GBps": 0.960378033
+    },
+    {
+      "direction": "up",
+      "chunk_bytes": 16384,
+      "active": 3,
+      "repeats": 3,
+      "min_GBps": 0.945805545,
+      "median_GBps": 0.949181496,
+      "max_GBps": 0.968713167
+    },
+    {
+      "direction": "up",
+      "chunk_bytes": 16384,
+      "active": 0,
+      "repeats": 3,
+      "min_GBps": 2.145095156,
+      "median_GBps": 2.18257095,
+      "max_GBps": 2.22123609
+    },
+    {
+      "direction": "up",
+      "chunk_bytes": 65536,
+      "active": 1,
+      "repeats": 3,
+      "min_GBps": 1.578674571,
+      "median_GBps": 1.621753371,
+      "max_GBps": 1.623329902
+    },
+    {
+      "direction": "up",
+      "chunk_bytes": 65536,
+      "active": 2,
+      "repeats": 3,
+      "min_GBps": 1.570244728,
+      "median_GBps": 1.657303108,
+      "max_GBps": 1.666386009
+    },
+    {
+      "direction": "up",
+      "chunk_bytes": 65536,
+      "active": 3,
+      "repeats": 3,
+      "min_GBps": 1.615324152,
+      "median_GBps": 1.630482942,
+      "max_GBps": 1.690233554
+    },
+    {
+      "direction": "up",
+      "chunk_bytes": 65536,
+      "active": 0,
+      "repeats": 3,
+      "min_GBps": 3.58531013,
+      "median_GBps": 3.593409241,
+      "max_GBps": 3.647395971
+    },
+    {
+      "direction": "up",
+      "chunk_bytes": 262144,
+      "active": 1,
+      "repeats": 3,
+      "min_GBps": 2.321514597,
+      "median_GBps": 2.381127498,
+      "max_GBps": 2.456076944
+    },
+    {
+      "direction": "up",
+      "chunk_bytes": 262144,
+      "active": 2,
+      "repeats": 3,
+      "min_GBps": 2.458954496,
+      "median_GBps": 2.539935119,
+      "max_GBps": 2.554964757
+    },
+    {
+      "direction": "up",
+      "chunk_bytes": 262144,
+      "active": 3,
+      "repeats": 3,
+      "min_GBps": 2.521228551,
+      "median_GBps": 2.557486601,
+      "max_GBps": 2.586746276
+    },
+    {
+      "direction": "up",
+      "chunk_bytes": 262144,
+      "active": 0,
+      "repeats": 3,
+      "min_GBps": 4.090188466,
+      "median_GBps": 4.114494591,
+      "max_GBps": 4.215372078
+    }
+  ],
+  "result": "PASS",
+  "scope": "Local loopback application payload throughput including pattern generation/check, framing, scheduling and application acknowledgements; not NIC bandwidth or a universal maximum."
+}

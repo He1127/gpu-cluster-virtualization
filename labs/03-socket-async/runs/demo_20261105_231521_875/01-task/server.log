@@ -1,0 +1,15 @@
+SOCKET LAB role=server pid=59388 iocp_threads=2 io_slice=0
+IOCP_THREAD index=0 tid=58556 pid=59388
+IOCP_THREAD index=1 tid=44188 pid=59388
+LISTEN host=127.0.0.1 port=64216 workers=3 server_pid=59388
+CONNECTED worker=1 peer=0 server_pid=59388
+CONNECTED worker=2 peer=1 server_pid=59388
+CONNECTED worker=3 peer=2 server_pid=59388
+TASK_SPLIT elements=1000003 workers=3 deterministic_value=(i*17+23)%1009
+TASK_RESULT worker=1 offset=0 count=333334 partial=167996887 expected=167996887 check=PASS iocp_tid=58556
+TASK_RESULT worker=2 offset=333334 count=333334 partial=167998240 expected=167998240 check=PASS iocp_tid=44188
+TASK_RESULT worker=3 offset=666668 count=333335 partial=167999009 expected=167999009 check=PASS iocp_tid=44188
+MERGE elements=1000003 partials=3 sum=503994136 reference=503994136 elapsed_s=0.005292500 check=PASS
+RESULT=PASS role=server pid=59388
+IOCP_SUMMARY index=0 tid=58556 completions=8
+IOCP_SUMMARY index=1 tid=44188 completions=10

@@ -1,0 +1,12 @@
+LOOPBACK APPLICATION THROUGHPUT - THREE REPEATS
+512 MiB/link; every payload word checked; application DONE timed
+direction chunk_KiB active min_GB/s  median_GB/s  max_GB/s
+down            16     0    1.7495       1.7603    1.7615
+down            64     0    2.6087       2.6111    2.6456
+down           256     0    2.6981       2.7112    2.7249
+up              16     0    2.1451       2.1826    2.2212
+up              64     0    3.5853       3.5934    3.6474
+up             256     0    4.0902       4.1145    4.2154
+active=0: THREE simultaneous TCP links (1.5 GiB total payload).
+Aggregate = sum(payload bytes) / common start-to-last-DONE seconds.
+Not the sum of individual rates; not physical NIC bandwidth.

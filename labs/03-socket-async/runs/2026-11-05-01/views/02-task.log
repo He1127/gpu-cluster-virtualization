@@ -1,0 +1,16 @@
+TASK SPLIT / MERGE - SAVED RUN VALUES
+127.0.0.1 : one coordinator + three independent workers
+PIDs (server,w1,w2,w3): [49236, 52140, 44108, 38624]
+N=1000003; value[i]=(i*17+23)%1009; IOCP pool=2/process
+worker 1: offset=0 count=333334
+  sum=167996887; reference=167996887; PASS
+worker 2: offset=333334 count=333334
+  sum=167998240; reference=167998240; PASS
+worker 3: offset=666668 count=333335
+  sum=167999009; reference=167999009; PASS
+Merged=503994136; CPU reference=503994136; PASS
+Actual completion-thread counters on coordinator:
+IOCP_SUMMARY index=0 tid=46088 completions=9
+IOCP_SUMMARY index=1 tid=41232 completions=9
+Process exit codes: [0, 0, 0, 0]
+RESULT=PASS

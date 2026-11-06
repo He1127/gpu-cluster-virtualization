@@ -1,0 +1,11 @@
+LOOPBACK APPLICATION THROUGHPUT - THREE REPEATS
+512 MiB/link; every payload word checked; application DONE timed
+direction chunk_KiB  link  min_GB/s  median_GB/s  max_GB/s
+down           256     1    2.2355       2.5676    2.6199
+down           256     2    2.4713       2.5512    2.5621
+down           256     3    2.4124       2.5271    2.5489
+up             256     1    2.3215       2.3811    2.4561
+up             256     2    2.4590       2.5399    2.5550
+up             256     3    2.5212       2.5575    2.5867
+This window shows 256 KiB chunks; all 3 sizes remain in measurements.csv.
+down = coordinator to worker; up = worker to coordinator

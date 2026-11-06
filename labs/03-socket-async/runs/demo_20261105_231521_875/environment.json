@@ -1,0 +1,10 @@
+{
+  "date": "2026-11-05T23:15:22.044297+08:00",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.13.5",
+  "logical_processors": 32,
+  "executable_sha256": "cf1da4c69a7e03a1b3e4c89b8eb9bedb29f4ce320f02a42f1c0466994cd70353",
+  "source_sha256": "c67a08ade946c2740799c03812ba2620c5a1951cc6de15973f987161978945b4",
+  "mode": "quick",
+  "address": "127.0.0.1"
+}

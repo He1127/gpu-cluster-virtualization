@@ -1,0 +1,12 @@
+REAL FRAMING / TAIL / DISCONNECT CHECKS
+7-byte I/O submissions, N=1003: process exits [0, 0, 0, 0]
+Tail block: 1048580 bytes/link, 65536-byte chunks, down/up PASS.
+Fault injection: worker 1 killed after task dispatch.
+Key original server lines:
+ERROR where=failed completion code=64
+RESULT=FAIL role=server pid=51224
+IOCP_SUMMARY index=0 tid=32840 completions=1
+IOCP_SUMMARY index=1 tid=26988 completions=8
+Actual exits (server,w1,w2,w3): [1, 1, 1, 1]
+Expected: server RESULT=FAIL and nonzero exit, finite completion.
+Failure-detection test verdict: PASS

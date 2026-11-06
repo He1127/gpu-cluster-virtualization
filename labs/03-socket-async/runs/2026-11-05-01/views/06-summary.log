@@ -1,0 +1,12 @@
+SOCKET LAB 03 - REAL FULL SUITE RESULT
+Address: 127.0.0.1 (one computer, 4 separate processes)
+Data path: WSASend/WSARecv OVERLAPPED + IOCP; 2 pool threads/process
+Task N=1000003: merged sum=503994136; CPU reference=503994136
+Task / 7-byte framing / final tail block / disconnect detection: PASS
+Benchmark: 16/64/256 KiB blocks, 512 MiB/link, 3 repeats
+Measured cases=72; warmups=6; all normal process exits=0
+Observed best aggregate DOWN: 2.724872 GB/s
+Observed best aggregate UP:   4.215372 GB/s
+Rates include pattern generation, framing, copy, validation and ACK.
+This is tested loopback throughput, not a universal socket/NIC limit.
+SUITE RESULT=PASS

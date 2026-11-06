@@ -1,0 +1,9 @@
+SOCKET LAB role=worker pid=37344 iocp_threads=2 io_slice=0
+IOCP_THREAD index=1 tid=28324 pid=37344
+IOCP_THREAD index=0 tid=38624 pid=37344
+WORKER_CONNECTED id=3 pid=37344 host=127.0.0.1 port=50782
+BENCH_START worker=3 direction=up payload=536870912 chunk=262144
+REMOTE_RECEIVE_VERIFIED worker=3 bytes=536870912
+RESULT=PASS role=worker pid=37344
+IOCP_SUMMARY index=0 tid=38624 completions=1131
+IOCP_SUMMARY index=1 tid=28324 completions=926

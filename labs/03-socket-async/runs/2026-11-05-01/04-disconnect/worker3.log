@@ -1,0 +1,9 @@
+SOCKET LAB role=worker pid=51220 iocp_threads=2 io_slice=0
+IOCP_THREAD index=0 tid=38300 pid=51220
+IOCP_THREAD index=1 tid=48344 pid=51220
+WORKER_CONNECTED id=3 pid=51220 host=127.0.0.1 port=49875
+ERROR where=WSASend code=10054
+TASK_COMPUTED worker=3 offset=668 count=335 sum=172080 iocp_tid=38300
+RESULT=FAIL role=worker pid=51220
+IOCP_SUMMARY index=0 tid=38300 completions=1
+IOCP_SUMMARY index=1 tid=48344 completions=2

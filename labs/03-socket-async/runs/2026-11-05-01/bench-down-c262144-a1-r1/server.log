@@ -1,0 +1,15 @@
+SOCKET LAB role=server pid=41476 iocp_threads=2 io_slice=0
+IOCP_THREAD index=0 tid=39712 pid=41476
+IOCP_THREAD index=1 tid=29624 pid=41476
+LISTEN host=127.0.0.1 port=54116 workers=3 server_pid=41476
+CONNECTED worker=1 peer=0 server_pid=41476
+CONNECTED worker=2 peer=1 server_pid=41476
+CONNECTED worker=3 peer=2 server_pid=41476
+BENCH_CONFIG direction=down active=1 payload_per_link=536870912 chunk=262144
+BENCH_DONE worker=1 direction=down received=536870912 pattern_errors=0 iocp_tid=29624
+CSV,link,1,536870912,0.204921300,2.619888279,20.959106232
+CSV,aggregate,1,536870912,0.204921300,2.619888279,20.959106232
+BENCH_CHECK=PASS direction=down active=1 payload_bytes=536870912 errors=0
+RESULT=PASS role=server pid=41476
+IOCP_SUMMARY index=0 tid=39712 completions=1029
+IOCP_SUMMARY index=1 tid=29624 completions=1032

@@ -1,0 +1,85 @@
+{
+  "started": "2026-11-05T22:04:48.539783+08:00",
+  "finished": "2026-11-05T22:04:49.309799+08:00",
+  "commands": [
+    [
+      "E:\\QC\\socket_lab03_20261105\\lab\\bin\\socket_lab.exe",
+      "--role",
+      "server",
+      "--port",
+      "64616",
+      "--workers",
+      "3",
+      "--threads",
+      "2",
+      "--timeout",
+      "20",
+      "--mode",
+      "bench",
+      "--direction",
+      "down",
+      "--active",
+      "0",
+      "--mib",
+      "512",
+      "--chunk",
+      "262144"
+    ],
+    [
+      "E:\\QC\\socket_lab03_20261105\\lab\\bin\\socket_lab.exe",
+      "--role",
+      "worker",
+      "--id",
+      "1",
+      "--port",
+      "64616",
+      "--threads",
+      "2",
+      "--timeout",
+      "20"
+    ],
+    [
+      "E:\\QC\\socket_lab03_20261105\\lab\\bin\\socket_lab.exe",
+      "--role",
+      "worker",
+      "--id",
+      "2",
+      "--port",
+      "64616",
+      "--threads",
+      "2",
+      "--timeout",
+      "20"
+    ],
+    [
+      "E:\\QC\\socket_lab03_20261105\\lab\\bin\\socket_lab.exe",
+      "--role",
+      "worker",
+      "--id",
+      "3",
+      "--port",
+      "64616",
+      "--threads",
+      "2",
+      "--timeout",
+      "20"
+    ]
+  ],
+  "pids": [
+    41180,
+    54152,
+    39280,
+    38624
+  ],
+  "exit_codes": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "executable_sha256": "5e81f1184e233faab49f2f211c2fb2073e4362baf67104b573717ab7ecc1c3c6",
+  "elapsed_wall_s": 0.7710236999992048,
+  "fault_worker1_killed": false,
+  "expected_outcome": "all four processes pass",
+  "check": "PASS"
+}

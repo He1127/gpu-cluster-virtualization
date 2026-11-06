@@ -1,0 +1,53 @@
+{
+  "files": [
+    {
+      "path": "lab\\src\\socket_lab.c",
+      "sha256": "c67a08ade946c2740799c03812ba2620c5a1951cc6de15973f987161978945b4",
+      "bytes": 25303
+    },
+    {
+      "path": "lab\\scripts\\build.cmd",
+      "sha256": "998b2d6c52cf44bb9820155171531af1615ee76768e5ebee615f26e1a810d4e6",
+      "bytes": 986
+    },
+    {
+      "path": "lab\\bin\\socket_lab.exe",
+      "sha256": "5e81f1184e233faab49f2f211c2fb2073e4362baf67104b573717ab7ecc1c3c6",
+      "bytes": 159744
+    }
+  ],
+  "compiler": "Visual Studio 2022 MSVC x64 /TC /std:c11 /O2 /W4",
+  "compile_log": "E:\\QC\\socket_lab03_20261105\\lab\\build\\compile.log",
+  "build_exit_code": 0,
+  "postfix_smoke_cases": [
+    {
+      "name": "fragment",
+      "task_elements": 1003,
+      "io_slice": 7,
+      "exit_codes": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "server_log": "work/core-smoke/fragment-server.log"
+    },
+    {
+      "name": "postfix-up",
+      "direction": "up",
+      "active": 0,
+      "mib_per_link": 32,
+      "chunk": 16384,
+      "exit_codes": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "server_log": "work/core-smoke/postfix-up-server.log"
+    }
+  ],
+  "loopback_only": true,
+  "all_benchmark_words_verified": true,
+  "shutdown_fix": "QUIT stops further receives, keeps send queue alive through BYE completion; close drains queued completions before freeing buffers"
+}

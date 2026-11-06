@@ -1,0 +1,8 @@
+SOCKET LAB role=worker pid=45040 iocp_threads=2 io_slice=7
+IOCP_THREAD index=0 tid=42716 pid=45040
+IOCP_THREAD index=1 tid=18672 pid=45040
+WORKER_CONNECTED id=3 pid=45040 host=127.0.0.1 port=49859
+TASK_COMPUTED worker=3 offset=668 count=335 sum=172080 iocp_tid=18672
+RESULT=PASS role=worker pid=45040
+IOCP_SUMMARY index=0 tid=42716 completions=65
+IOCP_SUMMARY index=1 tid=18672 completions=151

@@ -1,0 +1,9 @@
+SOCKET LAB role=worker pid=39280 iocp_threads=2 io_slice=0
+IOCP_THREAD index=0 tid=52796 pid=39280
+IOCP_THREAD index=1 tid=1452 pid=39280
+WORKER_CONNECTED id=2 pid=39280 host=127.0.0.1 port=64616
+BENCH_START worker=2 direction=down payload=536870912 chunk=262144
+RECEIVE_VERIFIED worker=2 bytes=536870912 pattern_errors=0
+RESULT=PASS role=worker pid=39280
+IOCP_SUMMARY index=0 tid=52796 completions=2157
+IOCP_SUMMARY index=1 tid=1452 completions=2157

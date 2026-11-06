@@ -1,0 +1,10 @@
+SAVED BUILD RECORD - MSVC x64 /TC /std:c11 /O2 /W4
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt v17.11.5
+** Copyright (c) 2022 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+socket_lab.c
+Build exit code: 0
+Executable SHA256: 5e81f1184e233faab49f2f211c2fb2073e4362baf67104b573717ab7ecc1c3c6
+Source SHA256: c67a08ade946c2740799c03812ba2620c5a1951cc6de15973f987161978945b4

@@ -1,0 +1,12 @@
+SOCKET LAB role=server pid=51224 iocp_threads=2 io_slice=0
+IOCP_THREAD index=0 tid=32840 pid=51224
+IOCP_THREAD index=1 tid=26988 pid=51224
+LISTEN host=127.0.0.1 port=49875 workers=3 server_pid=51224
+CONNECTED worker=1 peer=0 server_pid=51224
+CONNECTED worker=2 peer=1 server_pid=51224
+CONNECTED worker=3 peer=2 server_pid=51224
+TASK_SPLIT elements=1003 workers=3 deterministic_value=(i*17+23)%1009
+ERROR where=failed completion code=64
+RESULT=FAIL role=server pid=51224
+IOCP_SUMMARY index=0 tid=32840 completions=1
+IOCP_SUMMARY index=1 tid=26988 completions=8
